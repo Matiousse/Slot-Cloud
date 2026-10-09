@@ -1,4 +1,4 @@
-// CLOUDBURST — Stake Engine math publication.
+// RAIJIN OVERLOAD — Stake Engine math publication.
 //
 //   npm run math:generate          (full run, ~10 min on 4 cores)
 //   QUICK=1 npm run math:generate  (small smoke run)
@@ -7,9 +7,9 @@
 // ------
 // 1. Pools are simulated with the real game engine (shared/engine.ts):
 //      nb  = base spins that do NOT trigger the bonus (0-2 scatters)
-//      T1  = rounds triggering STORM CHASE        (3 scatters)
-//      T2  = rounds triggering EYE OF THE STORM   (4 scatters)
-//      T3  = rounds triggering CLOUDBURST         (5 scatters)
+//      T1  = rounds triggering OVERCHARGE         (3 scatters)
+//      T2  = rounds triggering THUNDER LOCK       (4 scatters)
+//      T3  = rounds triggering GOD MODE           (5 scatters)
 // 2. Each pool is stratified by payout band and sampled into books
 //    (tails over-sampled, weights = natural probability / books in band), so
 //    every book carries its true natural probability.
@@ -346,7 +346,7 @@ async function main() {
   const t0 = Date.now();
   fs.mkdirSync(OUT, { recursive: true });
   const pool = new WorkerPool(N_WORKERS);
-  console.log(`CLOUDBURST math — ${QUICK ? 'QUICK' : 'FULL'} run, ${N_WORKERS} workers, zstd ${ZSTD_LEVEL}`);
+  console.log(`RAIJIN OVERLOAD math — ${QUICK ? 'QUICK' : 'FULL'} run, ${N_WORKERS} workers, zstd ${ZSTD_LEVEL}`);
 
   // 1. payouts
   const payouts: Record<string, Int32Array> = {};

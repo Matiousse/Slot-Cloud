@@ -1,4 +1,4 @@
-// CLOUDBURST game engine: board generation, Storm Wilds, line evaluation and
+// RAIJIN OVERLOAD game engine: board generation, Thunder Wilds, line evaluation and
 // free spins. Deterministic for a given RNG, fast enough to simulate tens of
 // millions of rounds (typed arrays, numeric symbols) and able to record the
 // Stake Engine "book" (list of events) of any round.

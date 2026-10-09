@@ -1,12 +1,12 @@
-// CLOUDBURST — single source of truth for the game rules.
+// RAIJIN OVERLOAD — single source of truth for the game rules.
 // Used by the math generator (math/*) and by the frontend (src/*).
 //
 // All money values inside books are expressed in "book units":
 // hundredths of the BASE bet (1150 = 11.5x the base bet), exactly like the
 // Stake Engine `payoutMultiplier` field.
 
-export const GAME_ID = 'cloudburst';
-export const GAME_NAME = 'CLOUDBURST';
+export const GAME_ID = 'raijin-overload';
+export const GAME_NAME = 'RAIJIN OVERLOAD';
 export const GAME_VERSION = '1.0.0';
 
 export const REELS = 5;
@@ -29,13 +29,13 @@ export const S = {
   L3: 2, // Q
   L2: 3, // K
   L1: 4, // A
-  H4: 5, // Thunder Bell
-  H3: 6, // Lucky Seven
-  H2: 7, // Storm Diamond
-  H1: 8, // Sky Crown
+  H4: 5, // Power Cell
+  H3: 6, // Plasma Katana
+  H2: 7, // Thunder Gem
+  H1: 8, // Golden Kabuto
   WD: 9, // Wild
-  SW: 10, // Storm Wild (expands + multiplier, reels 2-4)
-  SC: 11, // Bonus scatter
+  SW: 10, // Thunder Wild (expands + multiplier, reels 2-4)
+  SC: 11, // Bonus drum (scatter)
 } as const;
 
 export const isWild = (s: number) => s === S.WD || s === S.SW;
@@ -46,13 +46,13 @@ export const SYMBOL_NAMES: Record<SymbolCode, string> = {
   L3: 'Q',
   L2: 'K',
   L1: 'A',
-  H4: 'Thunder Bell',
-  H3: 'Lucky Seven',
-  H2: 'Storm Diamond',
-  H1: 'Sky Crown',
+  H4: 'Power Cell',
+  H3: 'Plasma Katana',
+  H2: 'Thunder Gem',
+  H1: 'Golden Kabuto',
   WD: 'Wild',
-  SW: 'Storm Wild',
-  SC: 'Bonus',
+  SW: 'Thunder Wild',
+  SC: 'Bonus Drum',
 };
 
 /** Line pays for 3, 4 and 5 of a kind, in book units (hundredths of the bet). */
@@ -112,9 +112,9 @@ export interface TierInfo {
 }
 
 export const TIERS: Record<Tier, TierInfo> = {
-  1: { tier: 1, key: 'stormChase', scatters: 3, spins: 10, sticky: false, startingWild: false, guaranteedStorm: true },
-  2: { tier: 2, key: 'eyeOfTheStorm', scatters: 4, spins: 10, sticky: true, startingWild: true, guaranteedStorm: false },
-  3: { tier: 3, key: 'cloudburst', scatters: 5, spins: 10, sticky: true, startingWild: true, guaranteedStorm: false },
+  1: { tier: 1, key: 'overcharge', scatters: 3, spins: 10, sticky: false, startingWild: false, guaranteedStorm: true },
+  2: { tier: 2, key: 'thunderLock', scatters: 4, spins: 10, sticky: true, startingWild: true, guaranteedStorm: false },
+  3: { tier: 3, key: 'godMode', scatters: 5, spins: 10, sticky: true, startingWild: true, guaranteedStorm: false },
 };
 
 /** 3+ scatters during free spins award extra spins. */
