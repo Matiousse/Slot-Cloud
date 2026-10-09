@@ -1,0 +1,41 @@
+{
+  "game": "cloudburst",
+  "version": "1.0.0",
+  "targetRtp": 0.961,
+  "maxWinX": 10000,
+  "bonusOdds": {
+    "base": 226.5193947488018,
+    "ante": 45.30387896136135
+  },
+  "tierSplit": {
+    "1": 0.9574159843712272,
+    "2": 0.041852331511439876,
+    "3": 0.0007316841173328648
+  },
+  "modes": {
+    "base": {
+      "cost": 1,
+      "rtp": 0.961,
+      "hitRate": 0.311818,
+      "maxWinOdds": 307685
+    },
+    "ante": {
+      "cost": 3,
+      "rtp": 0.961,
+      "hitRate": 0.324022,
+      "maxWinOdds": 64886
+    },
+    "bonus": {
+      "cost": 100,
+      "rtp": 0.961,
+      "hitRate": 0.999978,
+      "maxWinOdds": 1869
+    },
+    "super": {
+      "cost": 400,
+      "rtp": 0.961,
+      "hitRate": 0.997295,
+      "maxWinOdds": 286
+    }
+  }
+}
