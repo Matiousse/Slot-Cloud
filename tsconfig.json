@@ -12,5 +12,5 @@
     "noUnusedLocals": true,
     "types": ["node", "vite/client"]
   },
-  "include": ["src", "shared", "math", "vite.config.ts"]
+  "include": ["src", "shared", "math", "dev", "vite.config.ts"]
 }

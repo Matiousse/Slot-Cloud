@@ -565,8 +565,9 @@ export class Board {
     // storm wild columns
     for (const st of this.storms.values()) this.drawStorm(ctx, st);
 
-    // win lines
+    // win frames + lines (lines only when readable), then multiplier badges on top
     if (hl) this.drawLines(ctx, hl);
+    for (const st of this.storms.values()) this.drawBadge(ctx, st);
 
     // strikes
     for (const s of this.strikes) {
@@ -640,6 +641,12 @@ export class Board {
       ctx.strokeRect(cx + 2, y + 2, C - 4, h - 4);
       ctx.restore();
     }
+  }
+
+  private drawBadge(ctx: CanvasRenderingContext2D, st: Storm) {
+    const { x, y, h } = this.rect;
+    const C = this.cell;
+    const cx = x + st.reel * C;
     if (st.badge > 0) {
       const b = this.badge(st.mult);
       const s = C * 0.9 * st.badge * (1 + 0.05 * Math.sin(this.time / 160 + st.reel));
@@ -654,6 +661,23 @@ export class Board {
   private drawLines(ctx: CanvasRenderingContext2D, hl: NonNullable<Board['highlight']>) {
     const C = this.cell;
     const appear = Math.min(1, (this.time - hl.t0) / 250);
+    // neon frames around winning symbols (storm columns have their own frame)
+    ctx.save();
+    ctx.globalAlpha = appear * (0.75 + 0.25 * Math.sin((this.time - hl.t0) / 120));
+    ctx.lineWidth = Math.max(2, C * 0.035);
+    ctx.strokeStyle = '#ffe680';
+    ctx.shadowColor = '#ffb800';
+    ctx.shadowBlur = C * 0.18;
+    for (const c of hl.cells) {
+      const reel = Math.floor(c / ROWS);
+      if (this.storms.get(reel)?.grow === 1) continue;
+      const row = c % ROWS;
+      const p = new Path2D();
+      p.roundRect(this.rect.x + reel * C + C * 0.06, this.rect.y + row * C + C * 0.06, C * 0.88, C * 0.88, C * 0.14);
+      ctx.stroke(p);
+    }
+    ctx.restore();
+    if (hl.lines.length > 4 && !hl.label) return;
     ctx.save();
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';

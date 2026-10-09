@@ -17,7 +17,14 @@ export class DemoBackend implements Backend {
   private eng = new Engine(cryptoRng());
   private rng = cryptoRng();
 
-  constructor(private currency = 'EUR') {}
+  /**
+   * Demo-only preview helper: `?demo_force=storm|big|t1|t2|t3` makes every
+   * demo spin show that feature (handy to preview the game). Ignored on Stake.
+   */
+  constructor(
+    private currency = 'EUR',
+    private force = '',
+  ) {}
 
   async authenticate(): Promise<AuthResult> {
     return {
@@ -45,7 +52,12 @@ export class DemoBackend implements Backend {
     if (cost > this.balance) throw Object.assign(new Error('Insufficient balance'), { code: 'ERR_IPB' });
     this.balance -= cost;
     let res;
-    if (mode.kind === 'buy') res = this.eng.bonus(mode.tier!, true);
+    const f = this.force;
+    if (/^t[123]$/.test(f) && mode.kind !== 'buy') res = this.eng.bonus(Number(f[1]) as Tier, true);
+    else if (f === 'storm' || f === 'big') {
+      do res = this.eng.noBonus(true);
+      while (f === 'storm' ? res.storms === 0 || res.payout === 0 : res.payout < 2000);
+    } else if (mode.kind === 'buy') res = this.eng.bonus(mode.tier!, true);
     else if (mode.kind === 'ante') {
       const boosted = NATURAL.pTrigger * (mode.boost ?? 1);
       res = this.rng() < boosted ? this.eng.bonus(this.pickTier(), true) : this.eng.noBonus(true);

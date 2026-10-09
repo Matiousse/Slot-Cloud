@@ -48,7 +48,7 @@ async function boot() {
       saveEvent: () => Promise.resolve(),
     };
   } else if (rgsUrl && sessionID) backend = new RgsBackend(rgsUrl, sessionID);
-  else backend = new DemoBackend(q('currency') || 'EUR');
+  else backend = new DemoBackend(q('currency') || 'EUR', q('demo_force'));
 
   const game = new Game(backend, ui, renderer);
   const splash = document.getElementById('splash')!;

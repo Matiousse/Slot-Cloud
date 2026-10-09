@@ -242,11 +242,11 @@ export class Background {
       if (!spr) continue;
       const cw = (spr.width / this.dpr) * c.s;
       const ch = (spr.height / this.dpr) * c.s;
-      ctx.globalAlpha = 0.1 + c.layer * 0.07 + this.flash * 0.5;
+      ctx.globalAlpha = 0.05 + c.layer * 0.045 + this.flash * 0.45;
       ctx.drawImage(spr, c.x * w - cw / 2, c.y * h - ch / 2, cw, ch);
     }
     ctx.globalAlpha = 1;
-    ctx.fillStyle = tint + (0.06 + this.flash * 0.1) + ')';
+    ctx.fillStyle = tint + (0.03 + this.flash * 0.1) + ')';
     ctx.fillRect(0, 0, w, h);
 
     // skyline

@@ -267,9 +267,15 @@ body.portrait .bar {
 
 body.portrait .bar-left {
   position: absolute;
-  left: 12px;
-  bottom: calc(var(--bar-h) * 0.32 + env(safe-area-inset-bottom));
-  flex-direction: column;
+  top: 8px;
+  left: 10px;
+  right: 10px;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+body.portrait .bar-left > * {
+  pointer-events: auto;
 }
 
 body.portrait .readouts {
@@ -429,6 +435,10 @@ body.portrait .switch {
   margin: 0;
 }
 
+body.fs .features {
+  visibility: hidden;
+}
+
 /* ------------------------------------------------------------ free spins HUD */
 
 .hud {
@@ -491,7 +501,7 @@ body.portrait .switch {
   inset: 0;
   display: grid;
   place-items: center;
-  background: radial-gradient(ellipse at center, rgba(10, 2, 30, 0.72), rgba(4, 0, 14, 0.9));
+  background: radial-gradient(ellipse at center, rgba(10, 2, 30, 0.5), rgba(4, 0, 14, 0.85));
   z-index: 20;
   animation: fade 0.25s ease;
   cursor: pointer;
@@ -500,7 +510,10 @@ body.portrait .switch {
 
 .banner-inner {
   text-align: center;
-  max-width: min(720px, 92vw);
+  max-width: min(760px, 94vw);
+  padding: 30px 40px;
+  border-radius: 32px;
+  background: radial-gradient(ellipse at center, rgba(8, 2, 24, 0.8) 35%, rgba(8, 2, 24, 0) 72%);
   animation: pop 0.45s cubic-bezier(0.2, 1.6, 0.4, 1);
 }
 
@@ -538,6 +551,7 @@ body.portrait .switch {
 }
 
 .banner .kicker {
+  text-transform: uppercase;
   font-size: clamp(14px, 2.6vw, 22px);
   color: var(--cyan);
   letter-spacing: 0.12em;
