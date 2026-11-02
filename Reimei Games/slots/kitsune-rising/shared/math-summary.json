@@ -1,0 +1,41 @@
+{
+  "game": "kitsune-rising",
+  "version": "1.0.0",
+  "targetRtp": 0.967,
+  "maxWinX": 10000,
+  "bonusOdds": {
+    "base": 217.45756030343654,
+    "ante": 43.491512053003056
+  },
+  "tierSplit": {
+    "1": 0.9569076559170006,
+    "2": 0.04234291201199092,
+    "3": 0.0007494320710086889
+  },
+  "modes": {
+    "base": {
+      "cost": 1,
+      "rtp": 0.967,
+      "hitRate": 0.604637,
+      "maxWinOdds": 4576370
+    },
+    "ante": {
+      "cost": 3,
+      "rtp": 0.967,
+      "hitRate": 0.611943,
+      "maxWinOdds": 915274
+    },
+    "bonus": {
+      "cost": 100,
+      "rtp": 0.967,
+      "hitRate": 1,
+      "maxWinOdds": 200954
+    },
+    "super": {
+      "cost": 300,
+      "rtp": 0.967,
+      "hitRate": 0.999895,
+      "maxWinOdds": null
+    }
+  }
+}
