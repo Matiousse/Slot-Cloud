@@ -10,8 +10,8 @@ const load = (p) => {
   const b = fs.readFileSync(path.join(ROOT, p));
   return opentype.parse(b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength));
 };
-const orbitron = load('node_modules/@fontsource/orbitron/files/orbitron-latin-900-normal.woff');
-const orbitronBold = load('node_modules/@fontsource/orbitron/files/orbitron-latin-700-normal.woff');
+const luckiest = load('node_modules/@fontsource/luckiest-guy/files/luckiest-guy-latin-400-normal.woff');
+const lilita = load('node_modules/@fontsource/lilita-one/files/lilita-one-latin-400-normal.woff');
 const dela = load('node_modules/@fontsource/dela-gothic-one/files/dela-gothic-one-japanese-400-normal.woff');
 
 /** One SVG path per glyph, laid out on a baseline at y = 0, with optional tracking. */
@@ -33,8 +33,8 @@ function word(font, text, size, tracking = 0) {
 }
 
 const out = {
-  reimei: word(orbitron, 'REIMEI', 100, 6),
-  games: word(orbitronBold, 'GAMES', 30, 24),
+  reimei: word(luckiest, 'REIMEI', 100, 4),
+  games: word(lilita, 'GAMES', 30, 16),
   kanji: word(dela, '黎明', 100, 0),
 };
 fs.writeFileSync(path.join(ROOT, '../../intro/glyphs.json'), JSON.stringify(out));

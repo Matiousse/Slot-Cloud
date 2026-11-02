@@ -36,12 +36,6 @@ const outBack = (k: number) => {
 
 type Word = { glyphs: { d: string; x1: number; x2: number }[]; box: { x: number; y: number; w: number; h: number } };
 
-function wordGroup(w: Word, id: string, cls: string) {
-  return w.glyphs
-    .map((g, i) => `<path id="${id}${i}" class="${cls}" d="${g.d}" pathLength="1"/>`)
-    .join('');
-}
-
 const STYLE = `
 .rm-intro{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;background:#040306;overflow:hidden;cursor:pointer;
   -webkit-tap-highlight-color:transparent;user-select:none}
@@ -114,8 +108,8 @@ function buildSvg() {
       <stop offset=".75" stop-color="#ffc93c"/><stop offset="1" stop-color="#ffb347" stop-opacity="0"/>
     </linearGradient>
     <linearGradient id="rm-gold" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#ffffff"/><stop offset=".3" stop-color="#ffe7a8"/><stop offset=".52" stop-color="#f2b33d"/>
-      <stop offset=".56" stop-color="#9a5a0a"/><stop offset=".78" stop-color="#e09a1a"/><stop offset="1" stop-color="#ffe08a"/>
+      <stop offset="0" stop-color="#fff7c2"/><stop offset=".45" stop-color="#ffd23a"/><stop offset=".5" stop-color="#ffb21a"/>
+      <stop offset="1" stop-color="#ff7a12"/>
     </linearGradient>
     <linearGradient id="rm-sheen" x1="0" x2="1">
       <stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".95"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
@@ -158,15 +152,21 @@ function buildSvg() {
 
   <g id="rm-logo">
     <g transform="translate(${rx.toFixed(2)} ${rBase.toFixed(2)}) scale(${rs.toFixed(4)})">
-      <g id="rm-word-shadow" fill="none" stroke="#000" stroke-opacity=".75" stroke-width="7" stroke-linejoin="round" opacity="0">
-        ${R.glyphs.map((g) => `<path d="${g.d}"/>`).join('')}
-      </g>
-      <g id="rm-word-fill" fill="url(#rm-gold)">${wordGroup(R, 'rm-wf', 'rm-wfill')}</g>
-      <g id="rm-word-stroke" fill="none" stroke="#ffe7a8" stroke-width="1.6" stroke-linejoin="round">${wordGroup(R, 'rm-ws', 'rm-wstroke')}</g>
+      <g id="rm-word-shadow" opacity="0"></g>
+      ${R.glyphs
+        .map(
+          (g, i) => `<g class="rm-letter" data-i="${i}" data-cx="${((g.x1 + g.x2) / 2).toFixed(2)}">
+        <path d="${g.d}" fill="#3a0a08" stroke="#140306" stroke-width="12" stroke-linejoin="round" transform="translate(0 6)"/>
+        <path d="${g.d}" fill="none" stroke="#140306" stroke-width="12" stroke-linejoin="round"/>
+        <path class="rm-wfill" d="${g.d}" fill="url(#rm-gold)"/>
+        <path d="${g.d}" fill="none" stroke="#fff6d8" stroke-opacity=".55" stroke-width="2" transform="translate(-1 -1.5)"/>
+      </g>`,
+        )
+        .join('')}
     </g>
     <rect id="rm-sheen" x="-200" y="${(rBase - R.box.h * rs - 10).toFixed(1)}" width="140" height="${(R.box.h * rs + 20).toFixed(1)}"
       fill="url(#rm-sheen)" clip-path="url(#rm-wordclip)" style="mix-blend-mode:screen" opacity="0"/>
-    <g id="rm-games" transform="translate(${gx.toFixed(2)} ${gBase.toFixed(2)}) scale(${gs.toFixed(4)})" fill="#f6e7c9">
+    <g id="rm-games" transform="translate(${gx.toFixed(2)} ${gBase.toFixed(2)}) scale(${gs.toFixed(4)})" fill="#fff4e0" stroke="#140306" stroke-width="5" paint-order="stroke" stroke-linejoin="round">
       ${G.glyphs.map((g, i) => `<path id="rm-g${i}" d="${g.d}" data-cx="${((g.x1 + g.x2) / 2).toFixed(2)}"/>`).join('')}
     </g>
     <g id="rm-seal" transform="translate(${sealX} ${sealY})" opacity="0">
@@ -251,8 +251,7 @@ export function playStudioIntro(opts: IntroOptions = {}): Promise<void> {
   const bands = Array.from(root.querySelectorAll<SVGRectElement>('.rm-band'));
   const horizon = $('#rm-horizon');
   const shadow = $('#rm-word-shadow');
-  const strokes = Array.from(root.querySelectorAll<SVGPathElement>('.rm-wstroke'));
-  const fills = Array.from(root.querySelectorAll<SVGPathElement>('.rm-wfill'));
+  const letters = Array.from(root.querySelectorAll<SVGGElement>('.rm-letter'));
   const sheen = $('#rm-sheen');
   const games = Array.from(root.querySelectorAll<SVGPathElement>('#rm-games path'));
   const gamesCenter = (glyphs.games.box.x + glyphs.games.box.w / 2);
@@ -321,14 +320,18 @@ export function playStudioIntro(opts: IntroOptions = {}): Promise<void> {
     bands.forEach((r, i) => r.setAttribute('transform', `translate(${((i % 2 ? -1 : 1) * (t * 9 + i * 20)).toFixed(2)} 0)`));
 
     // wordmark: stroke draw-on, then metallic fill
-    strokes.forEach((p, i) => {
-      const k = inOutCubic(seg(t, 1.0 + i * 0.08, 1.75 + i * 0.08));
-      p.style.strokeDasharray = '1';
-      p.style.strokeDashoffset = String(1 - k);
-      p.style.opacity = String(k > 0 ? 1 - seg(t, 2.3, 2.9) * 0.6 : 0);
+    // cartoon letters: pop in one by one with a squash & bounce, then a little wobble
+    letters.forEach((g, i) => {
+      const k = seg(t, 1.0 + i * 0.09, 1.45 + i * 0.09);
+      const cx = Number(g.dataset.cx);
+      const s1 = k <= 0 ? 0.001 : outBack(k);
+      const sq = 1 + Math.sin(k * Math.PI) * 0.18;
+      const wob = k >= 1 ? Math.sin(t * 5 + i * 1.3) * 2.2 : (1 - k) * (i % 2 ? 18 : -18);
+      const hop = k >= 1 ? -Math.abs(Math.sin(t * 4 + i * 0.9)) * 2.5 : 0;
+      g.setAttribute('transform', `translate(${cx} ${hop.toFixed(2)}) rotate(${wob.toFixed(2)} 0 -36) scale(${(s1 / sq).toFixed(3)} ${(s1 * sq).toFixed(3)}) translate(${-cx} 0)`);
+      g.setAttribute('opacity', k > 0 ? '1' : '0');
     });
-    fills.forEach((p, i) => p.setAttribute('opacity', String(outCubic(seg(t, 1.45 + i * 0.06, 2.05 + i * 0.06)))));
-    shadow.setAttribute('opacity', String(seg(t, 1.45, 2.1)));
+    shadow.setAttribute('opacity', '0');
     const sh = seg(t, 2.35, 3.15);
     sheen.setAttribute('opacity', String(sh > 0 && sh < 1 ? 1 : 0));
     sheen.setAttribute('x', String(150 + inOutCubic(sh) * 700));
