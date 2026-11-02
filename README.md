@@ -1,6 +1,6 @@
 # RAIJIN OVERLOAD — machine à sous 3D pour Stake Engine
 
-Un jeu **Reimei Games** (黎明, « l'aube »). Le jeu s'ouvre sur l'intro animée du studio (`src/intro/`, ~4 s, passable d'un tap ; `?nointro=1` pour la désactiver).
+Un jeu **Reimei Games** (黎明, « l'aube »). Le jeu s'ouvre sur l'intro animée du studio (`Reimei Games/intro/`, ~4 s, passable d'un tap ; `?nointro=1` pour la désactiver).
 
 Néo-Edo, 2099. Sous un orage éternel, **Raijin**, dieu du tonnerre réincarné en méca-samouraï
 géant, garde un sanctuaire de rouleaux. À chaque **Thunder Wild**, il frappe les rouleaux d'un

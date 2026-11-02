@@ -10,7 +10,7 @@
 - Talk to the user in **French**; answers objective.
 
 ## Studio
-- Provider / studio name: **Reimei Games** (黎明 = dawn). Studio intro: `src/intro/` (SVG + canvas + Web Audio sting), shown at game boot, preview page `dev/intro.html`.
+- Provider / studio name: **Reimei Games** (黎明 = dawn). Studio intro: `Reimei Games/intro/` (SVG + canvas + Web Audio sting), shown at game boot, preview page `dev/intro.html`.
 
 ## Key facts
 - Math: `shared/` (rules, engine, reels) + `math/` (generator, verifier). Published files in

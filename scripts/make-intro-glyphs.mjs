@@ -1,6 +1,6 @@
 // Extracts the vector outlines used by the Reimei Games studio intro, so the
 // logo renders identically everywhere without loading a font at runtime.
-//   node scripts/make-intro-glyphs.mjs  ->  src/intro/glyphs.json
+//   node scripts/make-intro-glyphs.mjs  ->  Reimei Games/intro/glyphs.json
 import fs from 'node:fs';
 import path from 'node:path';
 import opentype from 'opentype.js';
@@ -37,5 +37,5 @@ const out = {
   games: word(orbitronBold, 'GAMES', 30, 24),
   kanji: word(dela, '黎明', 100, 0),
 };
-fs.writeFileSync(path.join(ROOT, 'src/intro/glyphs.json'), JSON.stringify(out));
+fs.writeFileSync(path.join(ROOT, 'Reimei Games/intro/glyphs.json'), JSON.stringify(out));
 for (const [k, v] of Object.entries(out)) console.log(k, v.box);

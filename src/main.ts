@@ -13,7 +13,7 @@ import { RgsBackend, fetchReplay, type Backend, type AuthResult } from './net/ba
 import { renderLogo, renderSymbol } from './render/art';
 import { Renderer } from './render/renderer';
 import { UI } from './ui/ui';
-import { playStudioIntro } from './intro/studio-intro';
+import { playStudioIntro } from '../Reimei Games/intro/studio-intro';
 
 const params = new URLSearchParams(location.search);
 const q = (k: string) => params.get(k) ?? '';
