@@ -158,18 +158,6 @@ function build() {
     64,
   );
   body.rotateX(Math.PI / 2);
-  // milled edge: ridges on the outer rim
-  const pos = body.getAttribute('position') as THREE.BufferAttribute;
-  for (let i = 0; i < pos.count; i++) {
-    const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
-    const r = Math.hypot(x, y);
-    if (r > 0.42 && Math.abs(z) < 0.02) {
-      const a = Math.atan2(y, x);
-      const k = 1 + 0.012 * Math.sign(Math.sin(a * 32));
-      pos.setXY(i, x * k, y * k);
-    }
-  }
-  body.computeVertexNormals();
 
   const studList: THREE.BufferGeometry[] = [];
   const n = 16;
@@ -201,15 +189,16 @@ function build() {
   const faceMat = new THREE.MeshStandardMaterial({
     map: tex.map,
     emissiveMap: tex.emissive,
-    emissive: glow(PALETTE.cyan, 1.6),
-    metalness: 0.75,
-    roughness: 0.4,
+    emissive: glow(PALETTE.cyan, 0.9),
+    metalness: 0.6,
+    roughness: 0.45,
+    color: 0x9a8a78,
   });
-  const numFace = new THREE.MeshStandardMaterial({ color: 0xffe7a3, metalness: 1, roughness: 0.18, emissive: glow(0xffb52e, 0.7) });
+  const numFace = new THREE.MeshStandardMaterial({ color: 0xffd36b, metalness: 1, roughness: 0.2, emissive: glow(0xffa21c, 0.38) });
   const numSide = (MAT.goldDeep() as THREE.MeshStandardMaterial).clone();
   const ringMat = new THREE.MeshBasicMaterial({ color: glow(0xffd36b, 3), transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false, side: THREE.DoubleSide });
   const glintMat = new THREE.MeshBasicMaterial({ map: starTexture(), color: glow(0xfff2c8, 2.5), transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });
-  const backGlowMat = new THREE.MeshBasicMaterial({ map: radialTexture(), color: glow(0xffb52e, 1.4), transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });
+  const backGlowMat = new THREE.MeshBasicMaterial({ map: radialTexture(), color: glow(0xffa21c, 0.7), transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });
   shared = { body, studs, face, ring, bodyMat, studMat, faceMat, numFace, numSide, ringMat, glintMat, backGlowMat, quad: new THREE.PlaneGeometry(1, 1) };
   return shared;
 }
@@ -302,6 +291,6 @@ export class MultCoin {
       this.glint.rotation.z = k * 1.6;
     } else this.glintMat.opacity = 0;
     const bg = this.backGlow.material as THREE.MeshBasicMaterial;
-    bg.opacity = 0.55 + 0.2 * Math.sin(t * 0.004);
+    bg.opacity = 0.4 + 0.15 * Math.sin(t * 0.004);
   }
 }

@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="data:," />
+    <title>RAIJIN audio lab</title>
+    <style>
+      :root { color-scheme: dark; --bg: #07080f; --panel: #10142a; --line: #232a4d; --cyan: #38e8ff; --gold: #ffc93c; --red: #ff3b30; --ok: #4dffa0; }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: radial-gradient(ellipse at top, #121a3a, var(--bg) 60%); color: #dfe6ff; font: 13px/1.4 system-ui, sans-serif; min-height: 100vh; }
+      header { padding: 16px 20px 8px; display: flex; flex-wrap: wrap; gap: 12px; align-items: baseline; }
+      h1 { margin: 0; font-size: 20px; letter-spacing: 0.12em; color: var(--gold); }
+      h1 span { color: var(--cyan); }
+      .sub { opacity: 0.6; }
+      main { padding: 0 20px 24px; display: grid; gap: 14px; }
+      section { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+      section h2 { margin: 0 0 8px; font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--cyan); }
+      .row { display: flex; flex-wrap: wrap; gap: 6px; }
+      button { background: #182044; color: #e8eeff; border: 1px solid #2c3870; border-radius: 6px; padding: 6px 10px; font: inherit; cursor: pointer; }
+      button:hover { border-color: var(--cyan); }
+      button.on { background: #12405a; border-color: var(--cyan); }
+      pre { margin: 0; white-space: pre-wrap; font: 11px/1.35 ui-monospace, monospace; max-height: 60vh; overflow: auto; }
+      .pass { color: var(--ok); }
+      .fail { color: var(--red); }
+      table { border-collapse: collapse; width: 100%; font: 11px ui-monospace, monospace; }
+      td, th { border-bottom: 1px solid var(--line); padding: 2px 6px; text-align: right; }
+      td:first-child, th:first-child { text-align: left; }
+      img.spec { display: block; width: 260px; height: 54px; border-radius: 4px; image-rendering: pixelated; }
+      @media (max-width: 700px) { img.spec { width: 160px; height: 40px; } }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>RAIJIN <span>OVERLOAD</span> · audio lab</h1>
+      <div class="sub" id="status">click any button to unlock audio</div>
+    </header>
+    <main>
+      <div id="panels"></div>
+      <section>
+        <h2>Offline checks</h2>
+        <div class="row" style="margin-bottom: 8px"><button id="run">Run all offline checks</button></div>
+        <div id="table"></div>
+        <pre id="report"></pre>
+      </section>
+    </main>
+    <script type="module" src="./audio.ts"></script>
+  </body>
+</html>

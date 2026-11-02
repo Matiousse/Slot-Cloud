@@ -71,6 +71,16 @@ export class SymbolPool {
     return v;
   }
 
+  /** Show one pooled view per code far behind the board for a frame (shader warm-up). */
+  warmShow(on: boolean) {
+    for (const list of this.free.values()) {
+      const v = list[list.length - 1];
+      if (!v) continue;
+      v.object.visible = on;
+      if (on) v.object.position.set(0, 0, -40);
+    }
+  }
+
   acquire(code: SymbolCode): SymbolView {
     const v = this.free.get(code)!.pop() ?? this.make(code);
     v.object.visible = true;

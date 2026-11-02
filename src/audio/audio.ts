@@ -1,31 +1,145 @@
-// Procedural audio: every sound effect and both music loops are synthesized
-// live with the Web Audio API (no audio files, no licensing issues).
+// RAIJIN OVERLOAD — procedural sound design (Web Audio API, no audio files).
+//
+// Every sound is synthesized in TypeScript (voices.ts) and pre-rendered once into
+// AudioBuffers at unlock (bank.ts, with an OfflineAudioContext convolution pass for
+// the taiko room). At run time an event only plays a few buffers through a small
+// mixer: SFX + music buses -> shared hall reverb -> glue compressor -> limiter ->
+// soft clipper (ceiling 0.97, never clips). Music (music.ts) is a look-ahead
+// sequencer of pre-rendered koto / shamisen / shakuhachi / taiko / bass notes.
+//
+// Public API (used by src/game/controller.ts and src/scene/game-stage.ts):
+//   unlock, setSfx, setMusicOn, sfxOn, musicOn, click, spinStart, reelStop(i), scatter(n),
+//   drum(n), anticipationStart/Stop, thunder(s), rumble(s), storm(mult), charge(),
+//   strikeHit(mult), multiplier(mult), roar(), servo(), win(level), tick, bigWin(tier),
+//   fsTrigger, retrigger, coins, error, setMusic(m, tier?), ambience(level)
+// Spin start also runs a reel-whir loop that thins out with each reelStop(i); a rain/wind
+// storm ambience bed starts by itself once the bank is ready (ambience(0) turns it off).
+
+import { Bank, CHIME_NOTES, KOTO_NOTES, SHAM_NOTES } from './bank';
+import { Rng, type Sig } from './dsp';
+import { MusicPlayer } from './music';
 
 type Music = 'none' | 'base' | 'fs';
 
-const NOTE = (n: number) => 440 * Math.pow(2, (n - 69) / 12); // MIDI -> Hz
+const PREFS_KEY = 'raijin.audio';
+/** music bus level relative to SFX */
+const MUSIC_LEVEL = 0.3;
+const SPIN_LEVEL = 0.2;
+const AMB_LEVEL = 0.16;
+const OLD_PREFS_KEY = 'cloudburst.audio';
 
-const PREFS_KEY = 'cloudburst.audio';
+/** D In scale, ascending (koto / shamisen runs) */
+const IN = [62, 63, 67, 69, 70, 74, 75, 79, 81, 82, 86];
+const WIN_PAIRS = [[69, 74], [67, 74], [70, 74], [74, 81], [69, 81], [75, 74]];
+const WIN_TRIADS = [[67, 69, 74], [69, 70, 74], [62, 69, 74], [70, 74, 81], [67, 74, 79]];
+
+interface PlayOpts {
+  /** gain */
+  g?: number;
+  rate?: number;
+  pan?: number;
+  /** reverb send */
+  wet?: number;
+  /** variant index */
+  v?: number;
+  /** start offset inside the buffer (s) */
+  offset?: number;
+  /** stop after this many seconds (with a short release) */
+  dur?: number;
+  /** fade-in time (s) */
+  fadeIn?: number;
+  /** loop the buffer (stopped explicitly) */
+  loop?: boolean;
+}
+
+interface Voice {
+  s: AudioBufferSourceNode;
+  g: GainNode;
+}
+
+const clamp = (v: number, a: number, b: number) => (v < a ? a : v > b ? b : v);
+const rnd = (a: number, b: number) => a + Math.random() * (b - a);
+
+/** Soft clipper transfer curve. Input domain [-1, 1] maps to signal [-2, 2] (pre-gain 0.5). */
+function clipCurve(): Float32Array<ArrayBuffer> {
+  const n = 4096;
+  const c = new Float32Array(new ArrayBuffer(n * 4));
+  const knee = 0.8;
+  const room = 0.17;
+  for (let i = 0; i < n; i++) {
+    const a = ((i / (n - 1)) * 2 - 1) * 2;
+    const m = Math.abs(a);
+    c[i] = m <= knee ? a : Math.sign(a) * (knee + room * Math.tanh((m - knee) / room));
+  }
+  return c;
+}
+
+/** Stereo hall impulse response (temple hall: ~2.4 s, damped highs, early reflections). */
+function hallIR(sr: number): Sig[] {
+  const rng = new Rng(0x5eed);
+  const n = Math.ceil(2.7 * sr);
+  const pre = Math.round(0.016 * sr);
+  const out: Sig[] = [];
+  for (let c = 0; c < 2; c++) {
+    const ir = new Float32Array(n);
+    for (let k = 0; k < 9; k++) {
+      const t = 0.008 + rng.f() * 0.075;
+      ir[pre + Math.round(t * sr)] += rng.bi() * 0.7 * Math.exp(-t / 0.06);
+    }
+    let lp = 0;
+    let e = 0;
+    for (let i = pre; i < n; i++) {
+      const t = (i - pre) / sr;
+      const coef = 0.15 + 0.75 * Math.min(1, t / 1.8);
+      lp = lp * coef + rng.bi() * (1 - coef);
+      ir[i] += lp * Math.exp((-6.9 * t) / 2.4) * Math.min(1, t / 0.03) * 1.4;
+    }
+    const fade = Math.round(0.2 * sr);
+    for (let i = 0; i < fade; i++) ir[n - 1 - i] *= i / fade;
+    for (let i = 0; i < n; i++) e += ir[i] * ir[i];
+    const g = 1 / Math.sqrt(e);
+    for (let i = 0; i < n; i++) ir[i] *= g;
+    out.push(ir);
+  }
+  return out;
+}
 
 export class AudioEngine {
-  private ctx: AudioContext | null = null;
-  private master!: GainNode;
-  private sfx!: GainNode;
-  private musicBus!: GainNode;
-  private reverb!: ConvolverNode;
-  private delay!: DelayNode;
-  private noiseBuf!: AudioBuffer;
-  private anticip: { osc: OscillatorNode; gain: GainNode; lfo: OscillatorNode } | null = null;
-  private music: Music = 'none';
-  private step = 0;
-  private nextStepTime = 0;
-  private timer: number | null = null;
   sfxOn = true;
   musicOn = true;
+  private ctx: BaseAudioContext | null = null;
+  private live: AudioContext | null = null;
+  private offline = false;
+  private bank: Bank | null = null;
+  // mixer
+  private input!: GainNode;
+  private sfxDry!: GainNode;
+  private sfxWet!: GainNode;
+  private musDry!: GainNode;
+  private musWet!: GainNode;
+  private duckDry!: GainNode;
+  private duckWet!: GainNode;
+  // music
+  private music: Music = 'none';
+  private musicTier = 1;
+  private current: MusicPlayer | null = null;
+  private players: MusicPlayer[] = [];
+  private seed = (Date.now() & 0xffff) + 1;
+  private autoSuspended = false;
+  // state
+  private tAt: number | null = null;
+  private anticip: Voice | null = null;
+  private tickN = 0;
+  private lastTick = -1;
+  private winVar = 0;
+  private spinVoice: Voice | null = null;
+  private amb: Voice | null = null;
+  private ambLevel = 1;
 
   constructor() {
     try {
-      const p = JSON.parse(localStorage.getItem(PREFS_KEY) || '{}');
+      const raw = localStorage.getItem(PREFS_KEY) ?? localStorage.getItem(OLD_PREFS_KEY);
+      const p = JSON.parse(raw || '{}');
       if (typeof p.sfx === 'boolean') this.sfxOn = p.sfx;
       if (typeof p.music === 'boolean') this.musicOn = p.music;
     } catch {
@@ -41,366 +155,701 @@ export class AudioEngine {
     }
   }
 
-  /** Must be called from a user gesture. */
+  /** Must be called from a user gesture. Creates the context and renders the sound bank in the background. */
   unlock() {
-    if (!this.ctx) {
-      const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (this.offline) return;
+    if (!this.live) {
+      const AC = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
       if (!AC) return;
-      const ctx = new AC();
-      this.ctx = ctx;
-      const comp = ctx.createDynamicsCompressor();
-      comp.threshold.value = -14;
-      comp.ratio.value = 4;
-      this.master = ctx.createGain();
-      this.master.gain.value = 0.9;
-      this.master.connect(comp).connect(ctx.destination);
-      this.sfx = ctx.createGain();
-      this.sfx.gain.value = this.sfxOn ? 1 : 0;
-      this.sfx.connect(this.master);
-      this.musicBus = ctx.createGain();
-      this.musicBus.gain.value = this.musicOn ? 0.55 : 0;
-      this.musicBus.connect(this.master);
-      // reverb
-      this.reverb = ctx.createConvolver();
-      const len = ctx.sampleRate * 2.4;
-      const ir = ctx.createBuffer(2, len, ctx.sampleRate);
-      for (let ch = 0; ch < 2; ch++) {
-        const d = ir.getChannelData(ch);
-        for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.2);
+      let ctx: AudioContext;
+      try {
+        ctx = new AC({ latencyHint: 'interactive' });
+      } catch {
+        ctx = new AC();
       }
-      this.reverb.buffer = ir;
-      const rvGain = ctx.createGain();
-      rvGain.gain.value = 0.32;
-      this.reverb.connect(rvGain).connect(this.master);
-      // tempo delay for the arpeggio
-      this.delay = ctx.createDelay(1);
-      this.delay.delayTime.value = 0.36;
-      const fb = ctx.createGain();
-      fb.gain.value = 0.32;
-      const dl = ctx.createGain();
-      dl.gain.value = 0.35;
-      this.delay.connect(fb).connect(this.delay);
-      this.delay.connect(dl).connect(this.musicBus);
-      // noise
-      this.noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
-      const nd = this.noiseBuf.getChannelData(0);
-      for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+      this.live = ctx;
+      this.attach(ctx, new Bank(ctx.sampleRate, (ch, len, sr) => ctx.createBuffer(ch, len, sr)));
+      void this.bank!.renderAll().then(() => this.pump());
+      setInterval(() => this.pump(), 40);
+      document.addEventListener('visibilitychange', () => this.onVisibility());
+      // iOS can leave the context 'interrupted' (calls, Siri, lock screen): any later tap resumes it
+      window.addEventListener('pointerdown', () => {
+        if (ctx.state !== 'running' && !document.hidden) void ctx.resume().catch(() => undefined);
+      });
     }
-    if (this.ctx.state === 'suspended') void this.ctx.resume();
+    const ctx = this.live;
+    if (ctx.state === 'running') return;
+    void ctx.resume().then(() => this.pump(), () => undefined);
+    // iOS: play a silent buffer inside the gesture to fully unlock output
+    try {
+      const s = ctx.createBufferSource();
+      s.buffer = ctx.createBuffer(1, 1, ctx.sampleRate);
+      s.connect(ctx.destination);
+      s.start(0);
+    } catch {
+      /* ignore */
+    }
+  }
+
+  /**
+   * Dev/test hook: run the engine on any context (e.g. an OfflineAudioContext in
+   * dev/audio.ts) with an already rendered bank. Events are scheduled at `at()` time.
+   */
+  attachOffline(ctx: BaseAudioContext, bank: Bank) {
+    this.offline = true;
+    this.attach(ctx, bank);
+  }
+
+  /** Dev/test hook: schedule following events at this context time (null = now). */
+  at(t: number | null) {
+    this.tAt = t;
+  }
+
+  /** Dev/test hook: schedule music up to `until` (offline rendering). */
+  flushMusic(until: number) {
+    this.syncMusic();
+    for (const p of this.players) p.schedule(until);
+  }
+
+  /** Bank statistics (render time, memory). */
+  get bankStats() {
+    return this.bank?.stats ?? null;
+  }
+
+  private attach(ctx: BaseAudioContext, bank: Bank) {
+    this.ctx = ctx;
+    this.bank = bank;
+    const c = ctx;
+    // master chain: input -> glue comp -> limiter -> soft clip -> out
+    this.input = c.createGain();
+    this.input.gain.value = 0.42;
+    const glue = c.createDynamicsCompressor();
+    glue.threshold.value = -20;
+    glue.knee.value = 10;
+    glue.ratio.value = 2.5;
+    glue.attack.value = 0.01;
+    glue.release.value = 0.25;
+    const lim = c.createDynamicsCompressor();
+    lim.threshold.value = -6;
+    lim.knee.value = 0;
+    lim.ratio.value = 20;
+    lim.attack.value = 0.001;
+    lim.release.value = 0.12;
+    const pre = c.createGain();
+    pre.gain.value = 0.5;
+    const clip = c.createWaveShaper();
+    clip.curve = clipCurve();
+    clip.oversample = 'none';
+    // remove inaudible sub rumble before the dynamics so it never drives the compressor
+    const sub = c.createBiquadFilter();
+    sub.type = 'highpass';
+    sub.frequency.value = 30;
+    sub.Q.value = 0.6;
+    this.input.connect(sub).connect(glue).connect(lim).connect(pre).connect(clip).connect(c.destination);
+    // reverb
+    const rev = c.createConvolver();
+    rev.normalize = false;
+    const ir = hallIR(c.sampleRate);
+    const irb = c.createBuffer(2, ir[0].length, c.sampleRate);
+    irb.getChannelData(0).set(ir[0]);
+    irb.getChannelData(1).set(ir[1]);
+    rev.buffer = irb;
+    const revIn = c.createGain();
+    const lowcut = c.createBiquadFilter();
+    lowcut.type = 'highpass';
+    lowcut.frequency.value = 160;
+    const revOut = c.createGain();
+    revOut.gain.value = 0.9;
+    revIn.connect(lowcut).connect(rev).connect(revOut).connect(this.input);
+    // buses
+    this.sfxDry = c.createGain();
+    this.sfxWet = c.createGain();
+    this.sfxDry.connect(this.input);
+    this.sfxWet.connect(revIn);
+    this.musDry = c.createGain();
+    this.musWet = c.createGain();
+    this.duckDry = c.createGain();
+    this.duckWet = c.createGain();
+    // music EQ: tighter lows, more presence/air so it reads on phone speakers
+    const eq = (type: BiquadFilterType, f: number, gain: number, q = 0.7) => {
+      const b = c.createBiquadFilter();
+      b.type = type;
+      b.frequency.value = f;
+      b.gain.value = gain;
+      b.Q.value = q;
+      return b;
+    };
+    this.musDry
+      .connect(this.duckDry)
+      .connect(eq('highpass', 48, 0, 0.6))
+      .connect(eq('highpass', 48, 0, 0.9))
+      .connect(eq('lowshelf', 120, -3))
+      .connect(eq('peaking', 2800, 3, 0.8))
+      .connect(eq('highshelf', 7500, 3))
+      .connect(this.input);
+    this.musWet.connect(this.duckWet).connect(revIn);
+    this.applyGates(0);
+  }
+
+  private applyGates(tau: number) {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    const set = (p: AudioParam, v: number) => {
+      if (tau <= 0) p.value = v;
+      else p.setTargetAtTime(v, t, tau);
+    };
+    set(this.sfxDry.gain, this.sfxOn ? 1 : 0);
+    set(this.sfxWet.gain, this.sfxOn ? 1 : 0);
+    set(this.musDry.gain, this.musicOn ? MUSIC_LEVEL : 0);
+    set(this.musWet.gain, this.musicOn ? MUSIC_LEVEL : 0);
   }
 
   setSfx(on: boolean) {
     this.sfxOn = on;
-    if (this.ctx) this.sfx.gain.setTargetAtTime(on ? 1 : 0, this.ctx.currentTime, 0.05);
+    this.applyGates(0.05);
+    if (!on) {
+      this.anticipationStop();
+      if (this.ctx) this.stopSpinLoop(this.ctx.currentTime, 0.05);
+    }
+    this.syncAmbience();
     this.savePrefs();
   }
 
   setMusicOn(on: boolean) {
     this.musicOn = on;
-    if (this.ctx) this.musicBus.gain.setTargetAtTime(on ? 0.55 : 0, this.ctx.currentTime, 0.2);
+    this.applyGates(0.2);
     this.savePrefs();
+    this.pump();
   }
 
-  // ------------------------------------------------------------ primitives
+  // ------------------------------------------------------------ plumbing
 
-  private get t() {
-    return this.ctx!.currentTime;
-  }
-
-  private tone(
-    type: OscillatorType,
-    freq: number,
-    start: number,
-    dur: number,
-    peak: number,
-    opts: { attack?: number; freqEnd?: number; dest?: AudioNode; reverb?: number; detune?: number; filter?: number } = {},
-  ) {
-    const ctx = this.ctx!;
-    const o = ctx.createOscillator();
-    o.type = type;
-    o.frequency.setValueAtTime(freq, start);
-    if (opts.freqEnd) o.frequency.exponentialRampToValueAtTime(Math.max(1, opts.freqEnd), start + dur);
-    if (opts.detune) o.detune.value = opts.detune;
-    const g = ctx.createGain();
-    const a = opts.attack ?? 0.005;
-    g.gain.setValueAtTime(0.0001, start);
-    g.gain.exponentialRampToValueAtTime(peak, start + a);
-    g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
-    let node: AudioNode = o;
-    if (opts.filter) {
-      const f = ctx.createBiquadFilter();
-      f.type = 'lowpass';
-      f.frequency.value = opts.filter;
-      node.connect(f);
-      node = f;
+  private onVisibility() {
+    const ctx = this.live;
+    if (!ctx) return;
+    if (document.hidden) {
+      if (ctx.state === 'running') {
+        this.autoSuspended = true;
+        void ctx.suspend();
+      }
+    } else if (this.autoSuspended || ctx.state !== 'running') {
+      this.autoSuspended = false;
+      void ctx.resume().then(
+        () => {
+          for (const p of this.players) p.realign(ctx.currentTime);
+        },
+        () => undefined,
+      );
     }
-    node.connect(g);
-    g.connect(opts.dest ?? this.sfx);
-    if (opts.reverb) {
-      const s = ctx.createGain();
-      s.gain.value = opts.reverb;
-      g.connect(s).connect(this.reverb);
+  }
+
+  private pump() {
+    if (!this.ctx || this.offline) return;
+    if (this.ctx.state !== 'running') return;
+    this.syncMusic();
+    if (!this.amb && this.ambLevel > 0 && this.sfxOn) this.syncAmbience();
+    const now = this.ctx.currentTime;
+    for (const p of this.players) p.schedule(now + 0.3);
+    if (this.players.some((p) => p.finished(now))) {
+      this.players = this.players.filter((p) => {
+        if (!p.finished(now)) return true;
+        p.dispose();
+        return false;
+      });
     }
-    o.start(start);
-    o.stop(start + dur + 0.05);
   }
 
-  private noise(
-    start: number,
-    dur: number,
-    peak: number,
-    opts: { type?: BiquadFilterType; freq?: number; freqEnd?: number; q?: number; attack?: number; dest?: AudioNode; reverb?: number } = {},
-  ) {
-    const ctx = this.ctx!;
-    const src = ctx.createBufferSource();
-    src.buffer = this.noiseBuf;
-    src.loop = true;
-    const f = ctx.createBiquadFilter();
-    f.type = opts.type ?? 'bandpass';
-    f.frequency.setValueAtTime(opts.freq ?? 1000, start);
-    if (opts.freqEnd) f.frequency.exponentialRampToValueAtTime(opts.freqEnd, start + dur);
-    f.Q.value = opts.q ?? 1;
-    const g = ctx.createGain();
-    g.gain.setValueAtTime(0.0001, start);
-    g.gain.exponentialRampToValueAtTime(peak, start + (opts.attack ?? 0.005));
-    g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
-    src.connect(f).connect(g).connect(opts.dest ?? this.sfx);
-    if (opts.reverb) {
-      const s = ctx.createGain();
-      s.gain.value = opts.reverb;
-      g.connect(s).connect(this.reverb);
+  private now(): number {
+    if (this.tAt !== null) return this.tAt;
+    return this.ctx!.currentTime + 0.012;
+  }
+
+  private ok(): boolean {
+    return !!this.ctx && !!this.bank && this.sfxOn && (this.offline || this.ctx.state === 'running');
+  }
+
+  private play(id: string, at: number, o: PlayOpts = {}): Voice | null {
+    const b = this.bank!.get(id, o.v);
+    if (!b) return null;
+    const c = this.ctx!;
+    const s = c.createBufferSource();
+    s.buffer = b;
+    if (o.rate && o.rate !== 1) s.playbackRate.value = o.rate;
+    if (o.loop) s.loop = true;
+    const g = c.createGain();
+    const lvl = o.g ?? 1;
+    if (o.fadeIn) {
+      g.gain.setValueAtTime(0.0001, at);
+      g.gain.exponentialRampToValueAtTime(lvl, at + o.fadeIn);
+    } else g.gain.value = lvl;
+    s.connect(g);
+    let node: AudioNode = g;
+    let pan: StereoPannerNode | null = null;
+    if (o.pan && typeof c.createStereoPanner === 'function') {
+      pan = c.createStereoPanner();
+      pan.pan.value = clamp(o.pan, -1, 1);
+      g.connect(pan);
+      node = pan;
     }
-    src.start(start, Math.random());
-    src.stop(start + dur + 0.05);
+    node.connect(this.sfxDry);
+    let w: GainNode | null = null;
+    if (o.wet) {
+      w = c.createGain();
+      w.gain.value = o.wet;
+      node.connect(w).connect(this.sfxWet);
+    }
+    s.start(at, o.offset ?? 0);
+    if (o.dur) {
+      g.gain.setValueAtTime(lvl, at + o.dur);
+      g.gain.setTargetAtTime(0, at + o.dur, 0.06);
+      s.stop(at + o.dur + 0.5);
+    }
+    // release every node of the voice (connected-but-idle nodes would otherwise stay alive)
+    s.onended = () => {
+      g.disconnect();
+      pan?.disconnect();
+      w?.disconnect();
+    };
+    return { s, g };
   }
 
-  private bell(freq: number, start: number, dur: number, peak: number, reverb = 0.6) {
-    [1, 2.76, 5.4, 8.93].forEach((p, i) => this.tone('sine', freq * p, start, dur / (1 + i * 0.7), peak / (1 + i * 1.6), { reverb }));
+  /** nearest rendered note of a family, pitched with playbackRate */
+  private note(prefix: string, notes: readonly number[], midi: number, at: number, o: PlayOpts = {}): Voice | null {
+    let best = notes[0];
+    for (const n of notes) if (Math.abs(n - midi) < Math.abs(best - midi)) best = n;
+    return this.play(prefix + best, at, { ...o, rate: (o.rate ?? 1) * Math.pow(2, (midi - best) / 12) });
   }
 
-  private ok() {
-    return !!this.ctx && this.ctx.state === 'running';
+  /** taiko hit: soft (first half of variants) or hard layer */
+  private hit(id: string, at: number, hard: boolean, o: PlayOpts = {}): Voice | null {
+    const n = this.bank!.variants(id);
+    if (!n) return null;
+    const half = n >> 1;
+    return this.play(id, at, { ...o, v: (hard ? half : 0) + Math.floor(Math.random() * (half || 1)), rate: (o.rate ?? 1) * (1 + (Math.random() - 0.5) * 0.02) });
   }
 
-  // ------------------------------------------------------------ sound effects
+  /** briefly lower the music under a big moment */
+  private duck(depth: number, hold: number, at = this.now()) {
+    if (!this.ctx) return;
+    for (const g of [this.duckDry.gain, this.duckWet.gain]) {
+      g.cancelScheduledValues(at);
+      if (depth > 0) g.setTargetAtTime(1 - depth, at, 0.04);
+      g.setTargetAtTime(1, at + hold, depth > 0 ? 0.6 : 0.25);
+    }
+  }
+
+  private coinsAt(at: number, n: number, spread: number, level: number) {
+    for (let i = 0; i < n; i++) {
+      this.play('coin', at + Math.random() * spread, { g: level * rnd(0.55, 1), pan: rnd(-0.75, 0.75), rate: rnd(0.88, 1.18), wet: 0.18 });
+    }
+  }
+
+  // ------------------------------------------------------------ UI / reels
 
   click() {
     if (!this.ok()) return;
-    this.tone('sine', 1500, this.t, 0.05, 0.12, { freqEnd: 900 });
+    this.play('click', this.now(), { g: 0.75, rate: rnd(0.98, 1.03) });
   }
 
   spinStart() {
     if (!this.ok()) return;
-    this.noise(this.t, 0.28, 0.12, { freq: 500, freqEnd: 2600, q: 1.4, attack: 0.04 });
-    this.tone('triangle', 180, this.t, 0.2, 0.06, { freqEnd: 420 });
+    const t = this.now();
+    this.play('whoosh', t, { g: 0.5, wet: 0.08 });
+    // spinning-reels whir that thins out as each reel lands (auto-stops after 12 s)
+    this.stopSpinLoop(t, 0.05);
+    this.spinVoice = this.play('spinloop', t + 0.05, { g: SPIN_LEVEL, fadeIn: 0.12, loop: true, wet: 0.05, rate: rnd(0.97, 1.03) });
+    this.spinVoice?.s.stop(t + 12);
+  }
+
+  private stopSpinLoop(t: number, tau: number) {
+    const v = this.spinVoice;
+    if (!v) return;
+    this.spinVoice = null;
+    v.g.gain.cancelScheduledValues(t);
+    v.g.gain.setTargetAtTime(0, t, tau);
+    try {
+      v.s.stop(t + tau * 8);
+    } catch {
+      /* already stopped */
+    }
   }
 
   reelStop(i: number) {
     if (!this.ok()) return;
-    const t = this.t;
-    this.tone('sine', 120 - i * 4, t, 0.16, 0.32, { freqEnd: 50 });
-    this.noise(t, 0.04, 0.09, { type: 'highpass', freq: 3500 });
-    this.tone('square', 900 + i * 60, t, 0.03, 0.02);
+    const k = clamp(Math.round(i), 0, 4);
+    const t = this.now();
+    this.play(`reel${k}`, t, { g: 1.25, pan: (k - 2) * 0.16, wet: 0.08, rate: rnd(0.99, 1.01) });
+    const v = this.spinVoice;
+    if (v) {
+      if (k >= 4) this.stopSpinLoop(t, 0.04);
+      else {
+        v.g.gain.cancelScheduledValues(t);
+        v.g.gain.setTargetAtTime(SPIN_LEVEL * (0.25 + 0.75 * ((4 - k) / 5)), t, 0.03);
+      }
+    }
   }
 
-  scatter(n: number) {
-    if (!this.ok()) return;
-    const f = [523.25, 659.25, 783.99, 1046.5, 1318.5][Math.min(4, Math.max(0, n - 1))];
-    this.bell(f, this.t, 1.6, 0.22);
-    this.noise(this.t, 0.5, 0.05, { type: 'highpass', freq: 6000, reverb: 0.4 });
+  /**
+   * Storm ambience bed (rain, droplets, wind gusts). Starts automatically once the
+   * sound bank is ready; 0 = off, 1 = base game, ~1.5 = bonus (heavier storm).
+   */
+  ambience(level: number) {
+    this.ambLevel = Math.max(0, level);
+    this.syncAmbience();
   }
 
-  anticipationStart() {
-    if (!this.ok() || this.anticip) return;
-    const ctx = this.ctx!;
-    const osc = ctx.createOscillator();
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(110, this.t);
-    osc.frequency.exponentialRampToValueAtTime(440, this.t + 2.5);
-    const f = ctx.createBiquadFilter();
-    f.type = 'lowpass';
-    f.frequency.setValueAtTime(400, this.t);
-    f.frequency.exponentialRampToValueAtTime(3000, this.t + 2.5);
-    const gain = ctx.createGain();
-    gain.gain.setValueAtTime(0.0001, this.t);
-    gain.gain.exponentialRampToValueAtTime(0.07, this.t + 0.3);
-    const lfo = ctx.createOscillator();
-    lfo.frequency.value = 9;
-    const lg = ctx.createGain();
-    lg.gain.value = 0.03;
-    lfo.connect(lg).connect(gain.gain);
-    osc.connect(f).connect(gain).connect(this.sfx);
-    osc.start();
-    lfo.start();
-    this.anticip = { osc, gain, lfo };
-  }
-
-  anticipationStop() {
-    if (!this.anticip || !this.ctx) return;
-    const { osc, gain, lfo } = this.anticip;
-    gain.gain.cancelScheduledValues(this.t);
-    gain.gain.setTargetAtTime(0.0001, this.t, 0.05);
-    osc.stop(this.t + 0.3);
-    lfo.stop(this.t + 0.3);
-    this.anticip = null;
-  }
-
-  thunder(strength = 1) {
-    if (!this.ok()) return;
-    const t = this.t;
-    this.noise(t, 0.12, 0.25 * strength, { type: 'highpass', freq: 2500 });
-    this.noise(t + 0.02, 1.8 + strength, 0.5 * strength, { type: 'lowpass', freq: 900, freqEnd: 120, attack: 0.03, reverb: 0.5 });
-    this.tone('sine', 70, t, 1.2, 0.25 * strength, { freqEnd: 32 });
-  }
-
-  /** Distant rumble for background lightning. */
-  rumble(strength = 0.5) {
-    if (!this.ok()) return;
-    this.noise(this.t + 0.15, 2.2, 0.12 * strength, { type: 'lowpass', freq: 380, freqEnd: 90, attack: 0.4 });
-  }
-
-  storm(mult: number) {
-    if (!this.ok()) return;
-    const t = this.t;
-    this.thunder(0.8);
-    this.noise(t, 0.25, 0.2, { freq: 3000, freqEnd: 400, q: 6 });
-    this.tone('sawtooth', 1600, t, 0.22, 0.08, { freqEnd: 120, filter: 4000 });
-    // multiplier reveal sparkle (more notes for bigger multipliers)
-    const notes = mult >= 50 ? 6 : mult >= 10 ? 5 : mult >= 5 ? 4 : 3;
-    for (let i = 0; i < notes; i++) this.bell(NOTE(76 + [0, 4, 7, 12, 16, 19][i]), t + 0.38 + i * 0.06, 0.9, 0.09, 0.5);
-  }
-
-  win(level: number) {
-    if (!this.ok()) return;
-    const t = this.t;
-    const seq = [72, 76, 79, 84, 88];
-    const n = Math.min(seq.length, 2 + level);
-    for (let i = 0; i < n; i++) {
-      this.tone('triangle', NOTE(seq[i]), t + i * 0.07, 0.35, 0.13, { reverb: 0.3 });
-      this.tone('sine', NOTE(seq[i] + 12), t + i * 0.07, 0.25, 0.04);
+  private syncAmbience() {
+    if (!this.ctx || !this.bank) return;
+    const t = this.tAt ?? this.ctx.currentTime;
+    if (this.ambLevel <= 0 || !this.sfxOn) {
+      if (this.amb) {
+        const a = this.amb;
+        this.amb = null;
+        a.g.gain.cancelScheduledValues(t);
+        a.g.gain.setTargetAtTime(0, t, 0.4);
+        a.s.stop(t + 3);
+      }
+      return;
+    }
+    if (!this.amb) {
+      if (!this.bank.has('rain') || !this.ok()) return;
+      this.amb = this.play('rain', t + 0.02, { g: 0.0001, loop: true, wet: 0.15 });
+    }
+    if (this.amb) {
+      this.amb.g.gain.cancelScheduledValues(t);
+      this.amb.g.gain.setTargetAtTime(AMB_LEVEL * this.ambLevel, t + 0.02, 1.2);
     }
   }
 
   tick() {
     if (!this.ok()) return;
-    this.tone('sine', 2200 + Math.random() * 300, this.t, 0.025, 0.035);
-  }
-
-  bigWin(tier: number) {
-    if (!this.ok()) return;
-    const t = this.t;
-    const root = 60 + tier * 2;
-    const hits = [0, 0.16, 0.32, 0.62];
-    hits.forEach((dt, i) => {
-      const dur = i === hits.length - 1 ? 1.8 : 0.14;
-      for (const iv of [0, 4, 7, 12]) {
-        this.tone('sawtooth', NOTE(root + iv + (i === 3 ? 5 : 0)), t + dt, dur, 0.05, { filter: 2400, reverb: 0.3, detune: (Math.random() - 0.5) * 12 });
-      }
-    });
-    this.noise(t, 0.9, 0.12, { type: 'highpass', freq: 5000, freqEnd: 9000, attack: 0.8 });
-    this.noise(t + 0.62, 2.2, 0.16, { type: 'highpass', freq: 4000, reverb: 0.6 });
-    this.tone('sine', 90, t + 0.62, 0.6, 0.35, { freqEnd: 40 });
-  }
-
-  fsTrigger() {
-    if (!this.ok()) return;
-    const t = this.t;
-    this.noise(t, 1.3, 0.18, { freq: 300, freqEnd: 5000, q: 2, attack: 1.1 });
-    this.tone('sawtooth', 110, t, 1.3, 0.06, { freqEnd: 880, filter: 3000, attack: 1.0 });
-    setTimeout(() => {
-      if (!this.ok()) return;
-      this.thunder(1);
-      for (const n of [57, 64, 69, 72, 76]) this.bell(NOTE(n + 12), this.t, 2.4, 0.08, 0.7);
-    }, 1250);
-  }
-
-  retrigger() {
-    if (!this.ok()) return;
-    for (let i = 0; i < 8; i++) this.bell(NOTE(72 + [0, 4, 7, 12, 16, 19, 24, 28][i]), this.t + i * 0.05, 0.7, 0.07, 0.4);
-  }
-
-  coins() {
-    if (!this.ok()) return;
-    const t = this.t;
-    for (let i = 0; i < 3; i++) {
-      this.tone('sine', 1318.5, t + i * 0.09, 0.18, 0.08);
-      this.tone('sine', 1760, t + i * 0.09 + 0.03, 0.22, 0.06);
-    }
+    const t = this.now();
+    if (t - this.lastTick > 0.25) this.tickN = 0;
+    this.lastTick = t;
+    this.tickN++;
+    this.play('tick', t, { g: 0.26, rate: 1 + Math.min(0.5, this.tickN * 0.012), pan: rnd(-0.15, 0.15) });
   }
 
   error() {
     if (!this.ok()) return;
-    this.tone('square', 160, this.t, 0.3, 0.06, { filter: 900 });
+    this.play('error', this.now(), { g: 0.75 });
+  }
+
+  // ------------------------------------------------------------ scatters / anticipation
+
+  /** Bonus drum landed (n-th scatter of the spin, 1..5): increasingly epic taiko hit. */
+  drum(n: number) {
+    if (!this.ok()) return;
+    const k = clamp(Math.round(n), 1, 5);
+    const t = this.now();
+    const notes = [74, 75, 79, 81, 86];
+    this.hit('nagado', t, true, { g: 0.85, wet: 0.22 + k * 0.05 });
+    this.note('koto', KOTO_NOTES, notes[k - 1], t + 0.004, { g: 0.5, wet: 0.35, pan: 0.15 });
+    this.note('chime', CHIME_NOTES, notes[k - 1] + 12, t + 0.008, { g: 0.16 + 0.04 * k, wet: 0.4, pan: -0.1 });
+    if (k >= 2) {
+      this.hit('odaiko', t, k >= 3, { g: 0.5 + 0.1 * k, wet: 0.3 });
+      this.play('ka', t, { g: 0.3, pan: 0.3 });
+    }
+    if (k >= 3) {
+      this.hit('nagado', t + 0.03, true, { g: 0.65, pan: -0.25, wet: 0.3 });
+      this.play('crackle', t, { g: 0.3, wet: 0.2 });
+      this.duck(0.25, 0.8, t);
+    }
+    if (k >= 4) {
+      this.play('crack', t, { g: 0.4, wet: 0.3 });
+      this.play('boom', t, { g: 0.5 });
+      this.note('sham', SHAM_NOTES, 50, t, { g: 0.45 });
+      this.note('sham', SHAM_NOTES, 57, t + 0.012, { g: 0.4 });
+    }
+    if (k >= 5) {
+      this.play('rumble', t + 0.05, { g: 0.55, wet: 0.2 });
+      this.play('gong', t, { g: 0.28, wet: 0.45 });
+      for (let i = 0; i < 4; i++) this.note('chime', CHIME_NOTES, [86, 91, 93, 98][i], t + 0.12 + i * 0.06, { g: 0.18, wet: 0.45 });
+    }
+  }
+
+  scatter(n: number) {
+    this.drum(n);
+  }
+
+  anticipationStart() {
+    if (!this.ok()) return;
+    const t = this.now();
+    if (!this.anticip) this.anticip = this.play('riser', t, { g: 0.6, fadeIn: 0.25, wet: 0.12 });
+    this.duck(0.35, 12, t); // focus on the suspense; restored by anticipationStop()
+  }
+
+  anticipationStop() {
+    const a = this.anticip;
+    if (!a || !this.ctx) return;
+    this.anticip = null;
+    const t = this.tAt ?? this.ctx.currentTime;
+    const p = a.g.gain as AudioParam & { cancelAndHoldAtTime?: (t: number) => AudioParam };
+    if (p.cancelAndHoldAtTime) p.cancelAndHoldAtTime(t);
+    else p.cancelScheduledValues(t);
+    p.setTargetAtTime(0, t, 0.04);
+    a.s.stop(t + 0.35);
+    this.duck(0, 0, t);
+  }
+
+  // ------------------------------------------------------------ storm / Raijin
+
+  /** Lightning thunderclap (layered crack + sub boom + long rolling rumble). */
+  thunder(strength = 1) {
+    if (!this.ok()) return;
+    const s = clamp(strength, 0.2, 1.5);
+    const t = this.now();
+    this.play('crack', t, { g: 0.72 * s, pan: rnd(-0.3, 0.3), wet: 0.3 });
+    this.play('boom', t + 0.01, { g: 0.65 * s });
+    this.play('rumble', t + 0.04, { g: 0.5 + 0.35 * Math.min(1, s), wet: 0.25, rate: rnd(0.92, 1.05) });
+  }
+
+  /** Distant rumble for background lightning. */
+  rumble(strength = 0.5) {
+    if (!this.ok()) return;
+    this.play('far', this.now() + rnd(0, 0.12), { g: 0.25 + 0.4 * clamp(strength, 0, 1), pan: rnd(-0.5, 0.5), wet: 0.3, rate: rnd(0.85, 1.1) });
+  }
+
+  /** Mech power-up whine before a strike (~450 ms, ends on the peak). */
+  charge() {
+    if (!this.ok()) return;
+    const t = this.now();
+    this.play('charge', t, { g: 0.62, wet: 0.15 });
+    this.play('servoU', t, { g: 0.28, pan: -0.2 });
+  }
+
+  /** Lightning impact + metal clang, scaled by the multiplier. */
+  strikeHit(mult: number) {
+    if (!this.ok()) return;
+    this.strikeAt(this.now(), mult);
+  }
+
+  private strikeAt(t: number, mult: number) {
+    const k = clamp(Math.log10(Math.max(1, mult)) / 2, 0, 1);
+    this.play('crack', t, { g: 0.78, wet: 0.3 });
+    this.play('zap', t, { g: 0.5, wet: 0.2 });
+    this.play('boom', t + 0.004, { g: 0.55 + 0.35 * k });
+    this.hit('odaiko', t + 0.004, true, { g: 0.55 + 0.3 * k, wet: 0.3 });
+    this.play(k > 0.5 ? 'clangH' : 'clangM', t + 0.008, { g: 0.42 + 0.2 * k, wet: 0.25 });
+    this.play('sizzle', t + 0.06, { g: 0.32 + 0.25 * k, wet: 0.2 });
+    if (k >= 0.3) this.play('rumble', t + 0.08, { g: 0.3 + 0.4 * k, wet: 0.2 });
+    this.duck(0.3 + 0.2 * k, 0.6 + k, t);
+  }
+
+  /** Gold multiplier coin reveal: chime pitched by the multiplier size. */
+  multiplier(mult: number) {
+    if (!this.ok()) return;
+    this.multAt(this.now(), mult);
+  }
+
+  private multAt(t: number, mult: number) {
+    const th = [2, 3, 5, 10, 25, 50, 100];
+    let idx = 0;
+    for (let i = 0; i < th.length; i++) if (mult >= th[i]) idx = i;
+    const m = [74, 75, 79, 81, 82, 86, 87][idx];
+    this.play('shing', t, { g: 0.42, wet: 0.3, offset: 0.88 });
+    this.note('chime', CHIME_NOTES, m, t, { g: 0.48, wet: 0.35 });
+    this.note('chime', CHIME_NOTES, m + 12, t + 0.035, { g: 0.24, wet: 0.4 });
+    this.note('koto', KOTO_NOTES, Math.min(86, m), t + 0.01, { g: 0.38, wet: 0.3 });
+    this.coinsAt(t, 2 + idx, 0.25, 0.3);
+    if (mult >= 10) this.hit('nagado', t, true, { g: 0.65, wet: 0.3 });
+    if (mult >= 50) {
+      this.play('gong', t, { g: 0.28, wet: 0.5 });
+      this.play('choirD', t, { g: 0.42, wet: 0.45 });
+    }
+  }
+
+  /** Legacy combined Thunder Wild sound: strike + multiplier coin. */
+  storm(mult: number) {
+    if (!this.ok()) return;
+    const t = this.now();
+    this.strikeAt(t, mult);
+    this.multAt(t + 0.55, mult);
+  }
+
+  /** Mech roar: distorted growl + servo + steam hiss. */
+  roar() {
+    if (!this.ok()) return;
+    const t = this.now();
+    this.play('roar', t, { g: 0.88, wet: 0.3 });
+    this.duck(0.45, 1.8, t);
+  }
+
+  /** Short mech movement (servo whir + gear ticks + clunk). */
+  servo() {
+    if (!this.ok()) return;
+    this.play(Math.random() < 0.5 ? 'servoU' : 'servoD', this.now(), { g: 0.6, pan: rnd(-0.4, 0.4), wet: 0.1 });
+  }
+
+  // ------------------------------------------------------------ wins
+
+  /** Line-win sting (level 0..3), played in key over the music. */
+  win(level: number) {
+    if (!this.ok()) return;
+    const L = clamp(Math.round(level), 0, 3);
+    const t = this.now();
+    // small wins happen constantly: rotate through In-scale motifs so they never repeat verbatim
+    const k = this.winVar++;
+    if (L === 0) {
+      const pair = WIN_PAIRS[k % WIN_PAIRS.length];
+      this.note('koto', KOTO_NOTES, pair[0], t, { g: 0.4, wet: 0.3 });
+      this.note('koto', KOTO_NOTES, pair[1], t + 0.09, { g: 0.45, wet: 0.3 });
+      this.coinsAt(t + 0.05, 1, 0.05, 0.22);
+    } else if (L === 1) {
+      WIN_TRIADS[k % WIN_TRIADS.length].forEach((m, i) => this.note('koto', KOTO_NOTES, m, t + i * 0.08, { g: 0.45, wet: 0.3 }));
+      this.hit('shime', t, false, { g: 0.35 });
+      this.hit('shime', t + 0.16, true, { g: 0.35 });
+      this.coinsAt(t + 0.1, 2, 0.2, 0.25);
+    } else if (L === 2) {
+      [69, 70, 74, 79, 81, 86].forEach((m, i) => this.note('sham', SHAM_NOTES, m, t + i * 0.055, { g: 0.4, wet: 0.25, pan: -0.2 + i * 0.08 }));
+      this.hit('nagado', t, false, { g: 0.55 });
+      this.hit('nagado', t + 0.33, true, { g: 0.62, wet: 0.3 });
+      this.note('chime', CHIME_NOTES, 86, t + 0.33, { g: 0.28, wet: 0.4 });
+      this.coinsAt(t + 0.1, 4, 0.5, 0.26);
+    } else {
+      IN.forEach((m, i) => this.note('koto', KOTO_NOTES, m, t + i * 0.034, { g: 0.36 + i * 0.012, wet: 0.35, pan: -0.3 + i * 0.06 }));
+      this.hit('odaiko', t, true, { g: 0.75, wet: 0.3 });
+      this.hit('nagado', t + 0.4, true, { g: 0.7, wet: 0.3 });
+      this.play('gong', t, { g: 0.2, wet: 0.45 });
+      [50, 57, 62].forEach((m, i) => this.note('sham', SHAM_NOTES, m, t + 0.4 + i * 0.012, { g: 0.45 }));
+      this.note('chime', CHIME_NOTES, 93, t + 0.42, { g: 0.26, wet: 0.45 });
+      this.coinsAt(t + 0.1, 8, 0.9, 0.28);
+    }
+  }
+
+  /** Big win celebration stinger: tier 0 BIG, 1 MEGA, 2 EPIC, 3 LEGENDARY, 4 MAX WIN. */
+  bigWin(tier: number) {
+    if (!this.ok()) return;
+    const k = clamp(Math.round(tier), 0, 4);
+    const t = this.now();
+    this.duck(0.45, 2.4 + 0.4 * k, t);
+    // DON!
+    this.hit('odaiko', t, true, { g: 0.95, wet: 0.35 });
+    this.hit('nagado', t + 0.012, true, { g: 0.75, pan: -0.3, wet: 0.3 });
+    this.hit('nagado', t + 0.02, true, { g: 0.7, pan: 0.3, wet: 0.3 });
+    this.play('boom', t, { g: 0.5 + 0.1 * k });
+    this.play('gong', t, { g: 0.28 + 0.07 * k, wet: 0.45 });
+    if (k >= 2) this.play('crack', t, { g: 0.5, wet: 0.3 });
+    // tsugaru shamisen run up the In scale (starts higher each tier)
+    for (let i = 0; i < 9; i++) {
+      const m = IN[Math.min(IN.length - 1, i + Math.min(2, k))] + (i + k >= IN.length ? 12 : 0);
+      this.note('sham', SHAM_NOTES, m, t + 0.06 + i * 0.045, { g: 0.34 + i * 0.02, pan: -0.25 + i * 0.06, wet: 0.2 });
+    }
+    // DON! #2 with chord
+    const t2 = t + 0.5;
+    this.hit('odaiko', t2, true, { g: 1, wet: 0.4 });
+    this.hit('nagado', t2 + 0.01, true, { g: 0.8, wet: 0.3 });
+    this.play('ka', t2, { g: 0.4, pan: 0.3 });
+    [50, 57, 62, 69].forEach((m, i) => this.note('sham', SHAM_NOTES, m, t2 + i * 0.014, { g: 0.5, wet: 0.25 }));
+    [74, 81, 86].forEach((m, i) => this.note('koto', KOTO_NOTES, m, t2 + 0.02 + i * 0.02, { g: 0.4, wet: 0.4 }));
+    for (let i = 0; i < 3 + k; i++) this.note('chime', CHIME_NOTES, CHIME_NOTES[Math.min(CHIME_NOTES.length - 1, 3 + i)], t2 + 0.08 + i * 0.075, { g: 0.24, wet: 0.45 });
+    if (k >= 1) this.play(k >= 3 ? 'shakuM81' : 'shakuM74', t2, { g: 0.5, wet: 0.55, dur: 1.5 });
+    if (k >= 2) this.play('choirD', t2, { g: 0.55, wet: 0.45 });
+    if (k >= 3) this.play('rumble', t2, { g: 0.5, wet: 0.2 });
+    if (k >= 4) {
+      this.play('crack', t2, { g: 0.85, wet: 0.35 });
+      this.play('clangH', t2, { g: 0.5, wet: 0.3 });
+      this.play('choirEb', t2 + 1.1, { g: 0.5, wet: 0.45 });
+      this.play('choirD', t2 + 2.4, { g: 0.55, wet: 0.45 });
+      this.play('gong', t2 + 2.4, { g: 0.45, wet: 0.5 });
+      this.hit('odaiko', t2 + 2.4, true, { g: 1, wet: 0.4 });
+    }
+    this.coinsAt(t2 + 0.05, 6 + 5 * k, 1.4 + 0.3 * k, 0.32);
+  }
+
+  // ------------------------------------------------------------ bonus
+
+  /** Free spins trigger: accelerating taiko roll + charge (1.25 s) into a massive thunder impact. */
+  fsTrigger() {
+    if (!this.ok()) return;
+    const t = this.now();
+    const T = 1.25;
+    let x = 0;
+    let i = 0;
+    while (x < T - 0.03) {
+      const k = x / T;
+      this.hit('nagado', t + x, k > 0.45, { g: 0.4 + 0.5 * k, pan: i % 2 ? 0.22 : -0.22, wet: 0.25 });
+      if (k > 0.3) this.hit('shime', t + x + 0.02, k > 0.6, { g: 0.25 + 0.25 * k, pan: i % 2 ? -0.35 : 0.35 });
+      x += 0.16 * (1 - k) + 0.034;
+      i++;
+    }
+    this.play('riser', t, { offset: 3.6, g: 0.5, fadeIn: 0.4, dur: T, wet: 0.1 });
+    this.play('charge', t + T - 0.46, { g: 0.55 });
+    const ti = t + T;
+    this.play('crack', ti, { g: 0.95, wet: 0.35 });
+    this.play('boom', ti, { g: 1 });
+    this.hit('odaiko', ti, true, { g: 1, wet: 0.4 });
+    this.hit('odaiko', ti + 0.016, true, { g: 0.7, rate: 0.92, wet: 0.3 });
+    this.play('gong', ti, { g: 0.55, wet: 0.5 });
+    this.play('choirD', ti, { g: 0.6, wet: 0.5 });
+    this.play('rumble', ti + 0.05, { g: 0.7, wet: 0.2 });
+    this.play('sizzle', ti, { g: 0.35, wet: 0.2 });
+    [50, 57, 62].forEach((m, k) => this.note('sham', SHAM_NOTES, m, ti + k * 0.014, { g: 0.5 }));
+    this.duck(0.55, T + 2.6, t);
+  }
+
+  /** Extra free spins. */
+  retrigger() {
+    if (!this.ok()) return;
+    const t = this.now();
+    this.hit('nagado', t, true, { g: 0.8, wet: 0.3 });
+    this.hit('nagado', t + 0.14, true, { g: 0.9, wet: 0.3 });
+    this.play('ka', t + 0.07, { g: 0.35, pan: 0.3 });
+    this.play('zap', t, { g: 0.3, wet: 0.2 });
+    for (let i = 0; i < 7; i++) this.note('koto', KOTO_NOTES, IN[3 + i], t + 0.16 + i * 0.035, { g: 0.38, wet: 0.35, pan: -0.3 + i * 0.1 });
+    this.note('chime', CHIME_NOTES, 86, t + 0.45, { g: 0.3, wet: 0.45 });
+    this.note('chime', CHIME_NOTES, 93, t + 0.52, { g: 0.25, wet: 0.45 });
+    this.coinsAt(t + 0.2, 3, 0.4, 0.28);
+  }
+
+  /** Coins pouring (bonus buy). */
+  coins() {
+    if (!this.ok()) return;
+    const t = this.now();
+    this.play('clangL', t, { g: 0.22, wet: 0.2 });
+    this.hit('shime', t, true, { g: 0.35 });
+    let x = 0.02;
+    for (let i = 0; i < 16; i++) {
+      this.play('coin', t + x, { g: 0.26 * (1 - i / 26), pan: rnd(-0.6, 0.6), rate: rnd(0.9, 1.15), wet: 0.18 });
+      x += 0.025 + Math.random() * 0.05;
+    }
+    this.note('chime', CHIME_NOTES, 91, t + 0.03, { g: 0.3, wet: 0.4 });
+    this.note('chime', CHIME_NOTES, 98, t + 0.1, { g: 0.24, wet: 0.4 });
   }
 
   // ------------------------------------------------------------ music
 
-  setMusic(m: Music) {
-    if (m === this.music) return;
+  setMusic(m: Music, tier?: 1 | 2 | 3) {
     this.music = m;
-    if (!this.ctx) return;
-    if (m === 'none') {
-      if (this.timer) clearInterval(this.timer);
-      this.timer = null;
-      return;
-    }
-    if (!this.timer) {
-      this.step = 0;
-      this.nextStepTime = this.t + 0.1;
-      this.timer = window.setInterval(() => this.schedule(), 25);
-    }
+    if (m === 'fs') this.musicTier = tier ?? 1;
+    if (this.ambLevel > 0) this.ambience(m === 'fs' ? 1.3 + 0.15 * this.musicTier : 1);
+    this.syncMusic();
   }
 
-  private schedule() {
-    if (!this.ctx || this.music === 'none') return;
-    if (this.ctx.state !== 'running') {
-      this.nextStepTime = this.ctx.currentTime + 0.1;
+  private syncMusic() {
+    const ctx = this.ctx;
+    const bank = this.bank;
+    if (!ctx || !bank) return;
+    if (!this.offline && ctx.state !== 'running') return;
+    const want = this.musicOn ? this.music : 'none';
+    const cur = this.current;
+    if (cur && cur.mode === want) {
+      if (want === 'fs') cur.tier = this.musicTier;
       return;
     }
-    const fs = this.music === 'fs';
-    const bpm = fs ? 124 : 98;
-    const stepDur = 60 / bpm / 4;
-    while (this.nextStepTime < this.ctx.currentTime + 0.15) {
-      this.playStep(this.step, this.nextStepTime, stepDur, fs);
-      this.nextStepTime += stepDur;
-      this.step = (this.step + 1) % 64;
+    const t = this.now() + 0.03;
+    if (want === 'none') {
+      if (cur) cur.stop(t, 1.2);
+      this.current = null;
+      return;
     }
-  }
-
-  private playStep(step: number, t: number, sd: number, fs: boolean) {
-    const bus = this.musicBus;
-    // A minor: Am F C G  |  free spins: Dm Bb F C (darker, driving)
-    const prog = fs
-      ? [[50, 53, 57], [46, 50, 53], [53, 57, 60], [48, 52, 55]]
-      : [[57, 60, 64], [53, 57, 60], [48, 52, 55], [55, 59, 62]];
-    const bar = Math.floor(step / 16);
-    const s = step % 16;
-    const chord = prog[bar];
-    // pad
-    if (s === 0) {
-      for (const n of chord) {
-        this.tone('sawtooth', NOTE(n), t, sd * 16 + 0.4, 0.018, { attack: 0.35, filter: fs ? 1400 : 900, dest: bus, detune: -7 });
-        this.tone('sawtooth', NOTE(n), t, sd * 16 + 0.4, 0.018, { attack: 0.35, filter: fs ? 1400 : 900, dest: bus, detune: 7 });
-      }
-    }
-    // bass
-    const bassSteps = fs ? [0, 3, 6, 8, 11, 14] : [0, 6, 8, 14];
-    if (bassSteps.includes(s)) this.tone('sawtooth', NOTE(chord[0] - 24), t, sd * 1.8, 0.1, { filter: 380, dest: bus });
-    // arpeggio
-    const arp = [0, 1, 2, 1, 2, 0, 1, 2];
-    if (fs || s % 2 === 0) {
-      const n = chord[arp[s % 8]] + 24 + (s >= 8 && fs ? 12 : 0);
-      this.tone('triangle', NOTE(n), t, sd * 1.5, fs ? 0.03 : 0.026, { dest: this.delay });
-      this.tone('triangle', NOTE(n), t, sd * 1.5, fs ? 0.03 : 0.026, { dest: bus });
-    }
-    // drums
-    const kick = fs ? s % 4 === 0 : s === 0 || s === 8 || s === 10;
-    if (kick) this.tone('sine', 130, t, 0.22, 0.32, { freqEnd: 42, dest: bus });
-    if (s % 4 === 2) this.noise(t, 0.05, fs ? 0.05 : 0.03, { type: 'highpass', freq: 8000, dest: bus });
-    if (s === 4 || s === 12) {
-      this.noise(t, 0.16, fs ? 0.1 : 0.05, { freq: 1600, q: 0.8, dest: bus, reverb: 0.3 });
-      this.tone('triangle', 190, t, 0.1, fs ? 0.06 : 0.03, { freqEnd: 140, dest: bus });
-    }
+    const ready = bank.ready('drums') && bank.ready('base') && (want === 'base' || bank.ready('fs'));
+    if (!ready) return;
+    if (cur) cur.stop(t, want === 'fs' ? 0.5 : 2.2);
+    const p = new MusicPlayer({ ctx, bank, dry: this.musDry, wet: this.musWet }, want, this.musicTier, this.seed++);
+    p.start(want === 'base' && cur ? t + 0.6 : t, want === 'fs' ? 0.2 : 2.5);
+    this.current = p;
+    this.players.push(p);
   }
 }
 
