@@ -573,7 +573,7 @@ export class UI {
         `<table class="modes"><thead><tr><th>${t('rulesMode')}</th><th>${t('rulesCost')}</th><th>RTP</th><th>${t('rulesMaxWin')}</th></tr></thead><tbody>${modes}</tbody></table>
         <p>${t('rulesRtp')}: ${pct(summary.targetRtp)}. ${t('rulesRtpAll', { x: pct(summary.targetRtp) })}</p><p>${t('rulesMax', { x: X(WINCAP_X) })}</p>`,
       )}
-      ${sec(t('rulesTitle'), `<p>${t('rulesControls')}</p><p class="muted">${t('rulesMalfunction')}</p><p class="muted ver">RAIJIN OVERLOAD · v${summary.version}</p>`)}`,
+      ${sec(t('rulesTitle'), `<p>${t('rulesControls')}</p><p class="muted">${t('rulesMalfunction')}</p><p class="muted ver">RAIJIN OVERLOAD · v${summary.version} · © Reimei Games</p>`)}`,
       'wide info',
     );
     const music = this.q('#set-music', body) as HTMLInputElement;

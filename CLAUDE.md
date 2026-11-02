@@ -9,6 +9,9 @@
 - Visual bar: the first neon 2D version was rejected as "too basic". The user wants a **huge, premium, fully animated 3D game** with a strong theme and a **main character**, inspired by Nolimit City and the best (3-star) Stake slots — "every detail counts".
 - Talk to the user in **French**; answers objective.
 
+## Studio
+- Provider / studio name: **Reimei Games** (黎明 = dawn). Studio intro: `src/intro/` (SVG + canvas + Web Audio sting), shown at game boot, preview page `dev/intro.html`.
+
 ## Key facts
 - Math: `shared/` (rules, engine, reels) + `math/` (generator, verifier). Published files in
   `math/publish_files/` (index.json, lookUpTable_*.csv, books_*.jsonl.zst). Any change to
