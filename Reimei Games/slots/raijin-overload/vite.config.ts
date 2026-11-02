@@ -5,6 +5,8 @@ import { viteSingleFile } from 'vite-plugin-singlefile';
 // `npm run build:demo` -> dist-demo/index.html : single self-contained file (offline demo)
 export default defineConfig(({ mode }) => ({
   base: './',
+  // the shared studio intro lives in Reimei Games/intro
+  server: { fs: { allow: ['../..'] } },
   plugins: mode === 'demo' ? [viteSingleFile()] : [],
   build: {
     outDir: mode === 'demo' ? 'dist-demo' : 'dist',

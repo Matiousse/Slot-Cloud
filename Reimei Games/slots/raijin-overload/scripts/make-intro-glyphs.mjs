@@ -37,5 +37,5 @@ const out = {
   games: word(orbitronBold, 'GAMES', 30, 24),
   kanji: word(dela, '黎明', 100, 0),
 };
-fs.writeFileSync(path.join(ROOT, 'Reimei Games/intro/glyphs.json'), JSON.stringify(out));
+fs.writeFileSync(path.join(ROOT, '../../intro/glyphs.json'), JSON.stringify(out));
 for (const [k, v] of Object.entries(out)) console.log(k, v.box);

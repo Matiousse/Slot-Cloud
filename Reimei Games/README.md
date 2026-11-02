@@ -15,8 +15,8 @@ Reimei Games/
 Utilisation dans un jeu :
 
 ```ts
-import { playStudioIntro } from '../Reimei Games/intro/studio-intro';
+import { playStudioIntro } from '../../../intro/studio-intro'; // depuis slots/<jeu>/src
 void playStudioIntro(); // ~4,4 s, passable d'un tap
 ```
 
-Jeu actuel : **RAIJIN OVERLOAD** (racine du dépôt).
+Jeux : `slots/raijin-overload/` (**RAIJIN OVERLOAD**).

@@ -1,6 +1,6 @@
 // Preview page for the Reimei Games studio intro.
 //   ?introAt=2.4  freeze on a frame (screenshots)
-import { playStudioIntro } from '../Reimei Games/intro/studio-intro';
+import { playStudioIntro } from '../../../intro/studio-intro';
 
 const at = new URLSearchParams(location.search).get('introAt');
 
