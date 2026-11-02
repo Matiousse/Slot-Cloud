@@ -51,9 +51,9 @@ const POOLS: Record<string, { kind: PoolKind; sims: number; seed: number }> = {
 
 const k = (n: number) => (QUICK ? Math.round(n / 10) : n);
 const BUDGET = {
-  nb: k(100_000),
-  t1Buy: k(100_000),
-  t2Buy: k(100_000),
+  nb: k(101_000),
+  t1Buy: k(101_000),
+  t2Buy: k(101_000),
   t1Base: k(15_000),
   t2Base: k(8_000),
   t3Base: k(4_000),
