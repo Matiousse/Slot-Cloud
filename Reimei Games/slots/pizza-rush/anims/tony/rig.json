@@ -1,6 +1,6 @@
 {
  "size": [
-  603,
+  604,
   900
  ],
  "mix": 160,
@@ -8,7 +8,7 @@
   {
    "name": "socle",
    "pivot": [
-    330,
+    331,
     864
    ]
   },
@@ -24,15 +24,15 @@
    "name": "haut",
    "pivot": [
     316,
-    498
+    497
    ],
    "parent": "bassin"
   },
   {
    "name": "cou",
    "pivot": [
-    312,
-    418
+    313,
+    417
    ],
    "parent": "haut"
   },
@@ -46,7 +46,7 @@
    "parent": "haut",
    "offset": [
     0,
-    413
+    412
    ]
   },
   {
@@ -54,38 +54,38 @@
    "src": "bras-g.webp",
    "pivot": [
     407,
-    458
+    457
    ],
    "parent": "haut",
    "offset": [
-    390,
-    427
+    391,
+    426
    ]
   },
   {
    "name": "tete",
    "src": "tete.webp",
    "pivot": [
-    312,
-    418
+    313,
+    417
    ],
    "parent": "cou",
    "offset": [
     108,
-    9
+    8
    ]
   },
   {
    "name": "visage-yeux-fermes",
    "src": "visage-yeux-fermes.webp",
    "pivot": [
-    312,
-    418
+    313,
+    417
    ],
    "parent": "cou",
    "offset": [
-    267,
-    200
+    268,
+    199
    ],
    "alpha": 0
   },
@@ -93,13 +93,13 @@
    "name": "visage-rire",
    "src": "visage-rire.webp",
    "pivot": [
-    312,
-    418
+    313,
+    417
    ],
    "parent": "cou",
    "offset": [
-    267,
-    200
+    268,
+    199
    ],
    "alpha": 0
   },
@@ -107,13 +107,13 @@
    "name": "visage-choc",
    "src": "visage-choc.webp",
    "pivot": [
-    312,
-    418
+    313,
+    417
    ],
    "parent": "cou",
    "offset": [
-    267,
-    200
+    268,
+    199
    ],
    "alpha": 0
   },
@@ -121,13 +121,13 @@
    "name": "visage-triste",
    "src": "visage-triste.webp",
    "pivot": [
-    312,
-    418
+    313,
+    417
    ],
    "parent": "cou",
    "offset": [
     230,
-    200
+    199
    ],
    "alpha": 0
   },
@@ -135,13 +135,13 @@
    "name": "visage-clin",
    "src": "visage-clin.webp",
    "pivot": [
-    312,
-    418
+    313,
+    417
    ],
    "parent": "cou",
    "offset": [
-    267,
-    200
+    268,
+    199
    ],
    "alpha": 0
   },
@@ -149,7 +149,7 @@
    "name": "corps",
    "src": "corps.webp",
    "pivot": [
-    330,
+    331,
     864
    ],
    "parent": "socle",
@@ -180,12 +180,25 @@
    "src": "casquette.webp",
    "pivot": [
     271,
-    106
+    105
    ],
    "parent": "cou",
    "offset": [
-    168,
+    170,
     0
+   ]
+  },
+  {
+   "name": "meches",
+   "src": "meches.webp",
+   "pivot": [
+    313,
+    417
+   ],
+   "parent": "cou",
+   "offset": [
+    218,
+    10
    ]
   }
  ],

@@ -10,7 +10,7 @@ $PY atelier/pizza-rush/tony_calques.py $T
 $PY atelier/pizza-rush/tony_visages.py $T/calques
 rm -rf ../../slots/pizza-rush/anims/tony
 C=$T/calques
-OUT=$(./rl calques pizza-rush/tony $C/corps.png $C/bras-d.png:bras-d $C/bras-g.png:bras-g $C/tete.png:tete $C/casquette.png:casquette \
+OUT=$(./rl calques pizza-rush/tony $C/corps.png $C/bras-d.png:bras-d $C/bras-g.png:bras-g $C/tete.png:tete $C/casquette.png:casquette $C/meches.png:meches \
   $C/visage-yeux-fermes.png:visage-yeux-fermes $C/visage-rire.png:visage-rire $C/visage-choc.png:visage-choc $C/visage-triste.png:visage-triste $C/visage-clin.png:visage-clin --cote 900); echo "$OUT"
 F=$(echo "$OUT" | sed -n 's/.*facteur \([0-9.]*\), cadre \[\([0-9]*\), \([0-9]*\),.*/\1 \2 \3/p')
 $PY atelier/pizza-rush/tony_rig.py $F
