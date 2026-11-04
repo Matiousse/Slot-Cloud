@@ -8,6 +8,8 @@
   sur le Drive « Casino/Pizza Rush », on ne travaille que dans ce dossier Casino). Démo en ligne : artifact « Pizza Rush ».
 - Tony (perso Pizza Rush) : la tête ne change jamais, seuls les traits du visage sont permutés ; les bras ne bougent
   JAMAIS (ils sont dans le corps) ; casquette d'origine (pas de casquette reconstruite).
+- Interface Pizza Rush : pas de barre en bas ; gros boutons carrés sur les côtés (achat bonus avec le logo Reimei
+  Games à gauche, spin à droite), police « ballon » Modak (OFL) partout. Polices : toujours sous licence libre (OFL).
 - « Lancer en local » = l'utilisateur ne voit pas le localhost du conteneur : construire et publier en artifact.
 
 ## Animations de symboles : toujours avec Rig Lab

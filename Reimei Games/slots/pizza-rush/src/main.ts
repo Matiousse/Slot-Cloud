@@ -16,6 +16,7 @@ const q = (k: string) => params.get(k) ?? '';
 
 async function loadFonts() {
   const faces = [
+    new FontFace('Modak', 'url(fonts/modak-latin-400-normal.woff2)'),
     new FontFace('Luckiest Guy', 'url(fonts/luckiest-guy-latin-400-normal.woff2)'),
     new FontFace('Lilita One', 'url(fonts/lilita-one-latin-400-normal.woff2)'),
   ];

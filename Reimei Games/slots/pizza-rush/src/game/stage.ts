@@ -5,7 +5,7 @@ import { Reels } from './reels';
 import { EASE, tween, updateTweens } from './tween';
 import { MAX_TIPS, TIP_MULT } from '../../shared/game';
 
-export const FONT = 'Luckiest Guy';
+export const FONT = 'Modak'; // police « ballon » (OFL)
 export const FONT2 = 'Lilita One';
 
 export function textStyle(size: number, fill: string | string[] = '#ffffff', stroke = 10): any {
@@ -14,11 +14,12 @@ export function textStyle(size: number, fill: string | string[] = '#ffffff', str
     fontSize: size,
     fill: Array.isArray(fill)
       ? new PIXI.FillGradient({ type: 'linear', start: { x: 0, y: 0 }, end: { x: 0, y: 1 }, colorStops: fill.map((c, i) => ({ offset: i / (fill.length - 1), color: c })), textureSpace: 'local' })
-      : fill,
+      : new PIXI.FillGradient({ type: 'linear', start: { x: 0, y: 0 }, end: { x: 0, y: 1 }, colorStops: [{ offset: 0, color: '#ffffff' }, { offset: 0.5, color: fill }, { offset: 1, color: '#e9d2b4' }], textureSpace: 'local' }),
     stroke: { color: '#1b0f14', width: stroke, join: 'round' },
     dropShadow: { color: '#000000', alpha: 0.55, blur: 2, distance: Math.max(3, size / 14), angle: Math.PI / 2 },
     align: 'center',
-    letterSpacing: 1,
+    letterSpacing: 2,
+    padding: Math.round(size * 0.25),
   });
 }
 
@@ -176,23 +177,24 @@ export class Stage {
     this.world.scale.set(s);
     this.world.position.set((sw - DW * s) / 2, (sh - DH * s) / 2);
     if (this.portrait) {
-      this.logo.scale.set(0.62);
-      this.logo.position.set(540, 170);
+      this.logo.scale.set(0.6);
+      this.logo.position.set(540, 150);
       this.frame.scale.set(1.0);
-      this.frame.position.set(540, 790);
-      this.tony.scale.set(0.5);
-      this.tony.position.set(250, 1665);
-      this.fsPanel.scale.set(0.95);
-      this.fsPanel.position.set(800, 1470);
+      this.frame.position.set(540, 700);
+      this.tony.scale.set(0.36);
+      this.tony.position.set(540, 1420);
+      this.fsPanel.scale.set(0.7);
+      this.fsPanel.position.set(880, 1300);
     } else {
-      this.logo.scale.set(0.46);
-      this.logo.position.set(300, 135);
+      // commandes en panneaux latéraux (DOM) : la scène se tient entre les deux
+      this.logo.scale.set(0.4);
+      this.logo.position.set(230, 120);
       this.frame.scale.set(0.92);
-      this.frame.position.set(1110, 455);
-      this.tony.scale.set(0.7);
-      this.tony.position.set(320, 915);
-      this.fsPanel.scale.set(0.95);
-      this.fsPanel.position.set(1762, 470);
+      this.frame.position.set(1000, 450);
+      this.tony.scale.set(0.44);
+      this.tony.position.set(455, 1080);
+      this.fsPanel.scale.set(0.72);
+      this.fsPanel.position.set(1720, 165);
     }
     void hud;
   }

@@ -20,6 +20,28 @@ export interface HudEvents {
 
 const AUTO_STEPS = [0, 10, 25, 50, 100];
 
+// Icônes (traits épais arrondis, style cartoon) et emblème du studio Reimei Games (soleil levant 黎明).
+const sv = (d: string) => `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+const ICON = {
+  sound: sv('<path d="M8 19h8l10-8v26l-10-8H8z" fill="currentColor"/><path d="M33 17a10 10 0 0 1 0 14M38 12a17 17 0 0 1 0 24"/>'),
+  info: sv('<path d="M24 21v15"/><circle cx="24" cy="12" r="1.5" fill="currentColor"/>'),
+  turbo: sv('<path d="M27 5 11 27h12l-3 16 17-23H25z" fill="currentColor" stroke-width="3"/>'),
+  auto: sv('<path d="M38 24a14 14 0 1 1-4-9.9"/><path d="M36 6v9h-9"/><path d="M21 18l9 6-9 6z" fill="currentColor" stroke-width="2"/>'),
+  spin: `<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><path d="M50 26A19 19 0 0 0 15 20"/><path d="M14 38a19 19 0 0 0 35 6"/><path d="M52 12v14H38" /><path d="M12 52V38h14"/></svg>`,
+};
+const REIMEI = `<svg class="reimei" viewBox="0 0 120 92" aria-label="Reimei Games">
+  <defs><linearGradient id="rmSun" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd65a"/><stop offset=".55" stop-color="#ff7a2a"/><stop offset="1" stop-color="#e2302a"/></linearGradient>
+  <clipPath id="rmCut"><rect x="0" y="0" width="120" height="50"/></clipPath></defs>
+  <g stroke="#1b0f14" stroke-width="4">
+    <g clip-path="url(#rmCut)"><circle cx="60" cy="50" r="30" fill="url(#rmSun)"/></g>
+    <path d="M32 37h56M36 44h48" stroke="#1b0f14" stroke-width="3"/>
+    <path d="M14 50h92" stroke-width="5"/>
+  </g>
+  <path d="M14 50h92" stroke="#ffd65a" stroke-width="2"/>
+  <g stroke="#ffd65a" stroke-width="3" stroke-linecap="round" opacity=".9"><path d="M60 6v8M34 14l5 6M86 14l-5 6M18 30l7 3M102 30l-7 3"/></g>
+  <text x="60" y="80" text-anchor="middle" class="rm-t">REIMEI</text>
+</svg>`;
+
 export class Hud {
   private w = WORDS.normal;
   private el: HTMLElement;
@@ -53,24 +75,28 @@ export class Hud {
   private render() {
     const w = this.w;
     this.el.innerHTML = `
-      <div class="bar">
-        <div class="grp left">
-          <button class="ic" data-a="info" title="Rules">i</button>
-          <button class="ic" data-a="sound" title="Sound">♪</button>
+      <div class="side left">
+        <div class="minis">
+          <button class="mini" data-a="sound" title="Sound">${ICON.sound}</button>
+          <button class="mini" data-a="info" title="Rules">${ICON.info}</button>
         </div>
-        <div class="grp stats">
-          <div class="stat"><span>BALANCE</span><b data-v="balance">–</b></div>
-          <div class="stat win"><span>WIN</span><b data-v="win"></b></div>
-          <div class="stat bet"><span>${w.bet}</span>
+        <div class="stack">
+          <button class="ante" data-a="ante"><i></i><span>${w.ante}<small>×5 BONUS</small></span></button>
+          <button class="big buy" data-a="buy">${REIMEI}<b>${w.buy}</b></button>
+          <div class="val"><span>BALANCE</span><b data-v="balance">–</b></div>
+        </div>
+      </div>
+      <div class="winbox"><span>WIN</span><b data-v="win"></b></div>
+      <div class="side right">
+        <div class="stack">
+          <button class="big spin" data-a="spin" aria-label="Spin">${ICON.spin}</button>
+          <div class="val"><span>${w.bet}</span>
             <div class="betctl"><button data-a="minus">−</button><b data-v="bet">–</b><button data-a="plus">+</button></div>
           </div>
         </div>
-        <div class="grp right">
-          <button class="pill ante" data-a="ante" title="Ante"><i></i><span>${w.ante}<small>×5 BONUS CHANCE</small></span></button>
-          <button class="pill buy" data-a="buy">${w.buy}</button>
-          <button class="ic small" data-a="turbo" title="Turbo">⚡</button>
-          <button class="ic small" data-a="auto" title="Auto"><span data-v="auto">AUTO</span></button>
-          <button class="spin" data-a="spin" aria-label="Spin"><span>⟳</span></button>
+        <div class="minis">
+          <button class="mini" data-a="turbo" title="Turbo">${ICON.turbo}</button>
+          <button class="mini" data-a="auto" title="Auto"><span data-v="auto">${ICON.auto}</span></button>
         </div>
       </div>
       <div class="modal" data-m="buy"><div class="card">
@@ -167,7 +193,7 @@ export class Hud {
   setAuto(n: number) {
     this.autoIdx = Math.max(0, AUTO_STEPS.indexOf(n));
     const el = this.q('[data-v="auto"]');
-    el.textContent = n ? String(n) : 'AUTO';
+    el.innerHTML = n ? String(n) : ICON.auto;
     this.q('[data-a="auto"]').classList.toggle('on', n > 0);
   }
 
