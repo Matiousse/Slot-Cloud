@@ -1,3 +1,4 @@
 .venv/
 riglab/tools/node_modules/
 riglab/captures/
+__pycache__/
