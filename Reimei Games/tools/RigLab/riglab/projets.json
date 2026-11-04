@@ -1,0 +1,12 @@
+{
+ "projets": [
+  {
+   "id": "atelier",
+   "nom": "Atelier",
+   "dossier": "../atelier",
+   "rigs": "rigs",
+   "sources": "sources",
+   "audio": "audio"
+  }
+ ]
+}

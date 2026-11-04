@@ -1,0 +1,1288 @@
+{
+ "size": [
+  640,
+  627
+ ],
+ "mix": 140,
+ "parts": [
+  {
+   "name": "socle",
+   "pivot": [
+    319,
+    463
+   ]
+  },
+  {
+   "name": "haut",
+   "pivot": [
+    319,
+    209
+   ],
+   "parent": "socle"
+  },
+  {
+   "name": "bande",
+   "pivot": [
+    319,
+    350
+   ],
+   "parent": "socle"
+  },
+  {
+   "name": "aura",
+   "src": "aura.webp",
+   "pivot": [
+    320,
+    300
+   ],
+   "parent": "socle",
+   "blend": "add",
+   "offset": [
+    -200,
+    -220
+   ]
+  },
+  {
+   "name": "corps",
+   "src": "corps.webp",
+   "pivot": [
+    319,
+    463
+   ],
+   "parent": "socle",
+   "mesh": {
+    "grid": [
+     10,
+     10
+    ],
+    "bones": [
+     {
+      "name": "socle",
+      "radius": 210
+     },
+     {
+      "name": "bande",
+      "radius": 130
+     },
+     {
+      "name": "haut",
+      "radius": 210
+     }
+    ],
+    "falloff": 2.5
+   },
+   "shine": {
+    "angle": 22,
+    "width": 0.14,
+    "strength": 0.8,
+    "color": "#fff4d6"
+   }
+  },
+  {
+   "name": "rubis",
+   "src": "rubis.webp",
+   "pivot": [
+    319,
+    349
+   ],
+   "parent": "bande",
+   "offset": [
+    257,
+    288
+   ],
+   "shine": {
+    "angle": 35,
+    "width": 0.12,
+    "strength": 1.1,
+    "color": "#ffe3ea"
+   }
+  },
+  {
+   "name": "goutte-gauche",
+   "src": "goutte-1.webp",
+   "pivot": [
+    142,
+    433
+   ],
+   "parent": "socle",
+   "offset": [
+    66,
+    423
+   ],
+   "mesh": {
+    "grid": [
+     3,
+     8
+    ],
+    "dir": 1,
+    "length": 140,
+    "waveFreq": 0.8,
+    "waveSpeed": 1.3
+   },
+   "spring": {
+    "k": 60,
+    "damp": 4.8,
+    "gain": 1.2
+   }
+  },
+  {
+   "name": "goutte-centre",
+   "src": "goutte-2.webp",
+   "pivot": [
+    322,
+    430
+   ],
+   "parent": "socle",
+   "offset": [
+    230,
+    419
+   ],
+   "mesh": {
+    "grid": [
+     3,
+     9
+    ],
+    "dir": 1,
+    "length": 192,
+    "waveFreq": 0.8,
+    "waveSpeed": 1.1
+   },
+   "spring": {
+    "k": 50,
+    "damp": 4.2,
+    "gain": 1.2
+   }
+  },
+  {
+   "name": "goutte-droite",
+   "src": "goutte-3.webp",
+   "pivot": [
+    498,
+    433
+   ],
+   "parent": "socle",
+   "offset": [
+    425,
+    423
+   ],
+   "mesh": {
+    "grid": [
+     3,
+     8
+    ],
+    "dir": 1,
+    "length": 132,
+    "waveFreq": 0.8,
+    "waveSpeed": 1.5
+   },
+   "spring": {
+    "k": 66,
+    "damp": 5,
+    "gain": 1.2
+   }
+  },
+  {
+   "name": "lueur-rubis",
+   "src": "lueur-rubis.webp",
+   "pivot": [
+    320,
+    350
+   ],
+   "parent": "rubis",
+   "blend": "add",
+   "offset": [
+    192,
+    222
+   ]
+  }
+ ],
+ "emitters": {
+  "etincelles": {
+   "part": "rubis",
+   "at": [
+    320,
+    350
+   ],
+   "tex": "star",
+   "color": [
+    "#fff3c4",
+    "#ffd36b",
+    "#ff9aa8"
+   ],
+   "speed": [
+    40,
+    130
+   ],
+   "angle": -90,
+   "spread": 360,
+   "gravity": 20,
+   "drag": 2.2,
+   "life": [
+    450,
+    850
+   ],
+   "scale": [
+    0.35,
+    0.75
+   ],
+   "scaleEnd": 0,
+   "spin": [
+    -3,
+    3
+   ],
+   "fadeIn": 0.12,
+   "blend": "add",
+   "area": [
+    70,
+    70
+   ],
+   "z": 50
+  },
+  "braises": {
+   "part": "socle",
+   "at": [
+    320,
+    470
+   ],
+   "tex": "soft",
+   "color": [
+    "#ffd27a",
+    "#ff9a3c",
+    "#ff5a1f"
+   ],
+   "speed": [
+    40,
+    110
+   ],
+   "angle": -90,
+   "spread": 50,
+   "gravity": -40,
+   "drag": 1.2,
+   "life": [
+    500,
+    900
+   ],
+   "scale": [
+    0.25,
+    0.5
+   ],
+   "scaleEnd": 0,
+   "area": [
+    380,
+    30
+   ],
+   "fadeIn": 0.1,
+   "blend": "add"
+  }
+ },
+ "anims": {
+  "idle": {
+   "dur": 3000,
+   "loop": true,
+   "tracks": {
+    "socle": [
+     {
+      "t": 0,
+      "rot": 0.008
+     },
+     {
+      "t": 1500,
+      "rot": -0.008,
+      "ease": "inOutSine"
+     },
+     {
+      "t": 3000,
+      "rot": 0.008,
+      "ease": "inOutSine"
+     }
+    ],
+    "goutte-gauche": [
+     {
+      "t": 0,
+      "wave": 0.3,
+      "sy": 1
+     },
+     {
+      "t": 1650,
+      "wave": 0.45,
+      "sy": 1.04,
+      "ease": "inOutSine"
+     },
+     {
+      "t": 3000,
+      "wave": 0.3,
+      "sy": 1,
+      "ease": "inOutSine"
+     }
+    ],
+    "goutte-centre": [
+     {
+      "t": 0,
+      "wave": 0.3,
+      "sy": 1
+     },
+     {
+      "t": 1750,
+      "wave": 0.45,
+      "sy": 1.05,
+      "ease": "inOutSine"
+     },
+     {
+      "t": 3000,
+      "wave": 0.3,
+      "sy": 1,
+      "ease": "inOutSine"
+     }
+    ],
+    "goutte-droite": [
+     {
+      "t": 0,
+      "wave": 0.3,
+      "sy": 1
+     },
+     {
+      "t": 1850,
+      "wave": 0.45,
+      "sy": 1.04,
+      "ease": "inOutSine"
+     },
+     {
+      "t": 3000,
+      "wave": 0.3,
+      "sy": 1,
+      "ease": "inOutSine"
+     }
+    ],
+    "rubis": [
+     {
+      "t": 1850,
+      "shine": 0,
+      "flash": 0
+     },
+     {
+      "t": 2050,
+      "flash": 0.28,
+      "ease": "outQuad"
+     },
+     {
+      "t": 2450,
+      "shine": 1,
+      "ease": {
+       "*": [
+        0.12,
+        0.72,
+        0.12,
+        1
+       ],
+       "flash": "inOutQuad"
+      },
+      "flash": 0
+     }
+    ],
+    "lueur-rubis": [
+     {
+      "t": 0,
+      "alpha": 0.18
+     },
+     {
+      "t": 1850,
+      "alpha": 0.18
+     },
+     {
+      "t": 2050,
+      "alpha": 0.5,
+      "ease": "outQuad"
+     },
+     {
+      "t": 3000,
+      "alpha": 0.18,
+      "ease": "inOutSine"
+     }
+    ],
+    "haut": [
+     {
+      "t": 0,
+      "y": 0,
+      "sx": 1
+     },
+     {
+      "t": 1350,
+      "y": -4,
+      "sx": 1.012,
+      "ease": "inOutSine"
+     },
+     {
+      "t": 3000,
+      "y": 0,
+      "sx": 1,
+      "ease": "inOutSine"
+     }
+    ],
+    "aura": [
+     {
+      "t": 0,
+      "alpha": 0.22,
+      "sx": 1,
+      "sy": 1
+     },
+     {
+      "t": 1650,
+      "alpha": 0.32,
+      "sx": 1.04,
+      "sy": 1.04,
+      "ease": "inOutSine"
+     },
+     {
+      "t": 3000,
+      "alpha": 0.22,
+      "sx": 1,
+      "sy": 1,
+      "ease": "inOutSine"
+     }
+    ]
+   },
+   "events": []
+  },
+  "land": {
+   "dur": 730,
+   "loop": false,
+   "tracks": {
+    "socle": [
+     {
+      "y": -37.62,
+      "sx": 0.97,
+      "sy": 1.04,
+      "t": 0
+     },
+     {
+      "y": 0,
+      "sx": 1,
+      "sy": 1,
+      "ease": "inQuad",
+      "t": 110
+     },
+     {
+      "sx": 1.0693,
+      "sy": 0.91,
+      "ease": "outQuad",
+      "t": 170
+     },
+     {
+      "sx": 0.9793,
+      "sy": 1.027,
+      "ease": "inOutQuad",
+      "t": 320
+     },
+     {
+      "sx": 1.0072,
+      "sy": 0.9928,
+      "t": 470
+     },
+     {
+      "sx": 1,
+      "sy": 1,
+      "ease": "outQuad",
+      "t": 730
+     }
+    ],
+    "haut": [
+     {
+      "y": -12.371192307692306,
+      "sx": 1,
+      "t": 0
+     },
+     {
+      "y": 0,
+      "sx": 1,
+      "t": 110
+     },
+     {
+      "y": 41.23730769230769,
+      "sx": 1.09,
+      "ease": "outQuad",
+      "t": 190
+     },
+     {
+      "y": -13.19593846153846,
+      "sx": 0.97,
+      "ease": "inOutQuad",
+      "t": 350
+     },
+     {
+      "y": 3.298984615384615,
+      "sx": 1.01,
+      "t": 510
+     },
+     {
+      "y": 0,
+      "sx": 1,
+      "ease": "outQuad",
+      "t": 730
+     }
+    ],
+    "rubis": [
+     {
+      "t": 0,
+      "sx": 1,
+      "sy": 1,
+      "flash": 0
+     },
+     {
+      "t": 100,
+      "flash": 0
+     },
+     {
+      "t": 130,
+      "sx": 0.92,
+      "sy": 0.92,
+      "flash": 0.35,
+      "ease": "outQuad"
+     },
+     {
+      "t": 290,
+      "sx": 1.06,
+      "sy": 1.06,
+      "flash": 0.1,
+      "ease": [
+       0.2,
+       1.8,
+       0.4,
+       1
+      ]
+     },
+     {
+      "t": 460,
+      "sx": 1,
+      "sy": 1,
+      "flash": 0,
+      "ease": "outQuad"
+     }
+    ],
+    "goutte-centre": [
+     {
+      "t": 0,
+      "sy": 1.12,
+      "wave": 0.3
+     },
+     {
+      "t": 140,
+      "sy": 0.8,
+      "ease": {
+       "*": "inQuad",
+       "wave": "inOutQuad"
+      },
+      "wave": 0.3
+     },
+     {
+      "t": 310,
+      "sy": 1.14,
+      "wave": 0.9,
+      "ease": [
+       0.2,
+       1.8,
+       0.4,
+       1
+      ]
+     },
+     {
+      "t": 480,
+      "sy": 0.96
+     },
+     {
+      "t": 730,
+      "sy": 1,
+      "wave": 0.3,
+      "ease": "outQuad"
+     }
+    ],
+    "goutte-gauche": [
+     {
+      "t": 0,
+      "sy": 1.1,
+      "wave": 0.3
+     },
+     {
+      "t": 165,
+      "sy": 0.82,
+      "ease": {
+       "*": "inQuad",
+       "wave": "inOutQuad"
+      },
+      "wave": 0.3
+     },
+     {
+      "t": 335,
+      "sy": 1.12,
+      "wave": 0.9,
+      "ease": [
+       0.2,
+       1.8,
+       0.4,
+       1
+      ]
+     },
+     {
+      "t": 505,
+      "sy": 0.97
+     },
+     {
+      "t": 730,
+      "sy": 1,
+      "wave": 0.3,
+      "ease": "outQuad"
+     }
+    ],
+    "goutte-droite": [
+     {
+      "t": 0,
+      "sy": 1.1,
+      "wave": 0.3
+     },
+     {
+      "t": 185,
+      "sy": 0.82,
+      "ease": {
+       "*": "inQuad",
+       "wave": "inOutQuad"
+      },
+      "wave": 0.3
+     },
+     {
+      "t": 355,
+      "sy": 1.12,
+      "wave": 0.9,
+      "ease": [
+       0.2,
+       1.8,
+       0.4,
+       1
+      ]
+     },
+     {
+      "t": 525,
+      "sy": 0.97
+     },
+     {
+      "t": 730,
+      "sy": 1,
+      "wave": 0.3,
+      "ease": "outQuad"
+     }
+    ],
+    "lueur-rubis": [
+     {
+      "t": 0,
+      "alpha": 0.18
+     },
+     {
+      "t": 100,
+      "alpha": 0.18
+     },
+     {
+      "t": 130,
+      "alpha": 0.6,
+      "ease": "outQuad"
+     },
+     {
+      "t": 520,
+      "alpha": 0.18
+     }
+    ],
+    "aura": [
+     {
+      "t": 0,
+      "alpha": 0.22
+     },
+     {
+      "t": 100,
+      "alpha": 0.22
+     },
+     {
+      "t": 130,
+      "alpha": 0.42,
+      "ease": "outQuad"
+     },
+     {
+      "t": 600,
+      "alpha": 0.22
+     }
+    ]
+   },
+   "events": [
+    {
+     "t": 110,
+     "name": "pose"
+    },
+    {
+     "t": 120,
+     "emit": "braises",
+     "n": 6
+    }
+   ]
+  },
+  "win": {
+   "dur": 1370,
+   "loop": false,
+   "tracks": {
+    "socle": [
+     {
+      "t": 0,
+      "sx": 1,
+      "sy": 1,
+      "rot": 0
+     },
+     {
+      "t": 120,
+      "sx": 1.06,
+      "sy": 0.93,
+      "ease": "outQuad"
+     },
+     {
+      "t": 290,
+      "sx": 1.14,
+      "sy": 1.14,
+      "ease": {
+       "*": "outBackBig",
+       "rot": "inOutQuad"
+      },
+      "rot": 0
+     },
+     {
+      "t": 430,
+      "rot": -0.045,
+      "ease": "inOutSine"
+     },
+     {
+      "t": 580,
+      "rot": 0.034,
+      "ease": "inOutSine"
+     },
+     {
+      "t": 730,
+      "rot": -0.02,
+      "ease": "inOutSine"
+     },
+     {
+      "t": 880,
+      "rot": 0.009,
+      "ease": "inOutSine"
+     },
+     {
+      "t": 1030,
+      "rot": 0,
+      "ease": "inOutSine"
+     },
+     {
+      "t": 1100,
+      "sx": 1.12,
+      "sy": 1.12
+     },
+     {
+      "t": 1370,
+      "sx": 1,
+      "sy": 1,
+      "ease": "inOutCubic"
+     }
+    ],
+    "haut": [
+     {
+      "t": 0,
+      "y": 0
+     },
+     {
+      "t": 120,
+      "y": 24,
+      "ease": "outQuad"
+     },
+     {
+      "t": 300,
+      "y": -28,
+      "ease": [
+       0.2,
+       1.8,
+       0.4,
+       1
+      ]
+     },
+     {
+      "t": 620,
+      "y": -8
+     },
+     {
+      "t": 1000,
+      "y": -12,
+      "ease": "inOutSine"
+     },
+     {
+      "t": 1370,
+      "y": 0,
+      "ease": "inOutCubic"
+     }
+    ],
+    "rubis": [
+     {
+      "t": 0,
+      "sx": 1,
+      "sy": 1,
+      "flash": 0
+     },
+     {
+      "t": 150,
+      "sx": 0.88,
+      "sy": 0.88,
+      "flash": 0,
+      "ease": "outQuad"
+     },
+     {
+      "t": 340,
+      "sx": 1.4,
+      "sy": 1.4,
+      "flash": 0.95,
+      "ease": [
+       0.2,
+       1.8,
+       0.4,
+       1
+      ]
+     },
+     {
+      "t": 470,
+      "shine": 0
+     },
+     {
+      "t": 540,
+      "sx": 1.18,
+      "sy": 1.18,
+      "flash": 0.3,
+      "ease": "inOutQuad"
+     },
+     {
+      "t": 720,
+      "sx": 1.28,
+      "sy": 1.28,
+      "flash": 0.55,
+      "ease": "outQuad"
+     },
+     {
+      "t": 880,
+      "shine": 1,
+      "ease": [
+       0.12,
+       0.72,
+       0.12,
+       1
+      ]
+     },
+     {
+      "t": 950,
+      "sx": 1.1,
+      "sy": 1.1,
+      "flash": 0.15,
+      "ease": "inOutSine"
+     },
+     {
+      "t": 1370,
+      "sx": 1,
+      "sy": 1,
+      "flash": 0,
+      "ease": "inOutCubic"
+     }
+    ],
+    "corps": [
+     {
+      "t": 0,
+      "flash": 0
+     },
+     {
+      "t": 300,
+      "flash": 0.3,
+      "ease": "outQuad"
+     },
+     {
+      "t": 380,
+      "shine": 0
+     },
+     {
+      "t": 700,
+      "flash": 0.05
+     },
+     {
+      "t": 1080,
+      "shine": 1,
+      "ease": [
+       0.12,
+       0.72,
+       0.12,
+       1
+      ]
+     },
+     {
+      "t": 1370,
+      "flash": 0
+     }
+    ],
+    "lueur-rubis": [
+     {
+      "t": 0,
+      "alpha": 0.18,
+      "sx": 1,
+      "sy": 1
+     },
+     {
+      "t": 170,
+      "alpha": 0.12,
+      "sx": 0.9,
+      "sy": 0.9,
+      "ease": "outQuad"
+     },
+     {
+      "t": 380,
+      "alpha": 1,
+      "sx": 1.3,
+      "sy": 1.3,
+      "ease": "outQuad"
+     },
+     {
+      "t": 760,
+      "alpha": 0.85,
+      "sx": 1.2,
+      "sy": 1.2
+     },
+     {
+      "t": 1370,
+      "alpha": 0.18,
+      "sx": 1,
+      "sy": 1,
+      "ease": "inOutCubic"
+     }
+    ],
+    "goutte-centre": [
+     {
+      "t": 0,
+      "sy": 1,
+      "wave": 0.3
+     },
+     {
+      "t": 160,
+      "sy": 0.85,
+      "ease": {
+       "*": "outQuad",
+       "wave": "inOutQuad"
+      },
+      "wave": 0.3
+     },
+     {
+      "t": 370,
+      "sy": 1.3,
+      "wave": 1.4,
+      "ease": [
+       0.2,
+       1.8,
+       0.4,
+       1
+      ]
+     },
+     {
+      "t": 600,
+      "sy": 0.9,
+      "ease": "inOutQuad"
+     },
+     {
+      "t": 810,
+      "sy": 1.1,
+      "ease": "inOutQuad"
+     },
+     {
+      "t": 1080,
+      "sy": 0.98,
+      "wave": 0.6,
+      "ease": "inOutSine"
+     },
+     {
+      "t": 1370,
+      "sy": 1,
+      "wave": 0.3,
+      "ease": "inOutCubic"
+     }
+    ],
+    "goutte-gauche": [
+     {
+      "t": 0,
+      "sy": 1,
+      "wave": 0.3
+     },
+     {
+      "t": 200,
+      "sy": 0.86,
+      "ease": {
+       "*": "outQuad",
+       "wave": "inOutQuad"
+      },
+      "wave": 0.3
+     },
+     {
+      "t": 410,
+      "sy": 1.26,
+      "wave": 1.3,
+      "ease": [
+       0.2,
+       1.8,
+       0.4,
+       1
+      ]
+     },
+     {
+      "t": 640,
+      "sy": 0.91,
+      "ease": "inOutQuad"
+     },
+     {
+      "t": 850,
+      "sy": 1.08,
+      "ease": "inOutQuad"
+     },
+     {
+      "t": 1120,
+      "sy": 0.98,
+      "wave": 0.6,
+      "ease": "inOutSine"
+     },
+     {
+      "t": 1370,
+      "sy": 1,
+      "wave": 0.3,
+      "ease": "inOutCubic"
+     }
+    ],
+    "goutte-droite": [
+     {
+      "t": 0,
+      "sy": 1,
+      "wave": 0.3
+     },
+     {
+      "t": 220,
+      "sy": 0.86,
+      "ease": {
+       "*": "outQuad",
+       "wave": "inOutQuad"
+      },
+      "wave": 0.3
+     },
+     {
+      "t": 430,
+      "sy": 1.26,
+      "wave": 1.3,
+      "ease": [
+       0.2,
+       1.8,
+       0.4,
+       1
+      ]
+     },
+     {
+      "t": 660,
+      "sy": 0.91,
+      "ease": "inOutQuad"
+     },
+     {
+      "t": 870,
+      "sy": 1.08,
+      "ease": "inOutQuad"
+     },
+     {
+      "t": 1140,
+      "sy": 0.98,
+      "wave": 0.6,
+      "ease": "inOutSine"
+     },
+     {
+      "t": 1370,
+      "sy": 1,
+      "wave": 0.3,
+      "ease": "inOutCubic"
+     }
+    ],
+    "aura": [
+     {
+      "t": 0,
+      "alpha": 0.22,
+      "sx": 1,
+      "sy": 1
+     },
+     {
+      "t": 320,
+      "alpha": 0.8,
+      "sx": 1.15,
+      "sy": 1.15,
+      "ease": "outQuad"
+     },
+     {
+      "t": 1060,
+      "alpha": 0.55,
+      "sx": 1.1,
+      "sy": 1.1
+     },
+     {
+      "t": 1370,
+      "alpha": 0.22,
+      "sx": 1,
+      "sy": 1,
+      "ease": "inOutCubic"
+     }
+    ]
+   },
+   "events": [
+    {
+     "t": 0,
+     "name": "gain"
+    },
+    {
+     "t": 340,
+     "emit": "etincelles",
+     "n": 12
+    },
+    {
+     "t": 720,
+     "emit": "etincelles",
+     "n": 6
+    }
+   ]
+  },
+  "remove": {
+   "dur": 330,
+   "loop": false,
+   "tracks": {
+    "socle": [
+     {
+      "sx": 1,
+      "sy": 1,
+      "alpha": 1,
+      "t": 0
+     },
+     {
+      "sx": 1.12,
+      "sy": 1.12,
+      "ease": "outQuad",
+      "t": 90
+     },
+     {
+      "sx": 0.15,
+      "sy": 0.15,
+      "alpha": 0,
+      "ease": "inCubic",
+      "t": 330
+     }
+    ],
+    "corps": [
+     {
+      "flash": 0,
+      "t": 0
+     },
+     {
+      "flash": 0.8,
+      "ease": "outQuad",
+      "t": 90
+     },
+     {
+      "flash": 0.2,
+      "t": 250
+     }
+    ],
+    "rubis": [
+     {
+      "t": 0,
+      "flash": 0
+     },
+     {
+      "t": 90,
+      "flash": 0.9,
+      "ease": "outQuad"
+     }
+    ],
+    "aura": [
+     {
+      "t": 0,
+      "alpha": 0.22
+     },
+     {
+      "t": 90,
+      "alpha": 0.6
+     },
+     {
+      "t": 330,
+      "alpha": 0,
+      "ease": "inCubic"
+     }
+    ],
+    "lueur-rubis": [
+     {
+      "t": 0,
+      "alpha": 0.18
+     },
+     {
+      "t": 90,
+      "alpha": 1
+     },
+     {
+      "t": 330,
+      "alpha": 0,
+      "ease": "inCubic"
+     }
+    ]
+   },
+   "events": []
+  },
+  "eclat": {
+   "dur": 600,
+   "loop": false,
+   "tracks": {
+    "corps": [
+     {
+      "t": 0,
+      "flash": 0
+     },
+     {
+      "t": 120,
+      "flash": 0.4,
+      "ease": "outQuad"
+     },
+     {
+      "t": 600,
+      "flash": 0
+     }
+    ],
+    "rubis": [
+     {
+      "t": 0,
+      "flash": 0
+     },
+     {
+      "t": 150,
+      "flash": 0.6,
+      "ease": "outQuad"
+     },
+     {
+      "t": 600,
+      "flash": 0
+     }
+    ]
+   },
+   "events": []
+  }
+ },
+ "constraints": [
+  {
+   "type": "suivre",
+   "part": "bande",
+   "cible": "haut",
+   "y": 0.45,
+   "sx": 0.5,
+   "sy": 0.5
+  }
+ ],
+ "mixes": {
+  "win>idle": 220,
+  "land>idle": 140
+ }
+}

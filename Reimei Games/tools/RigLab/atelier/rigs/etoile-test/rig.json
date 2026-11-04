@@ -1,0 +1,615 @@
+{
+ "size": [
+  640,
+  640
+ ],
+ "mix": 150,
+ "parts": [
+  {
+   "name": "centre",
+   "pivot": [
+    320,
+    340
+   ]
+  },
+  {
+   "name": "bras0a",
+   "pivot": [
+    320,
+    270
+   ],
+   "parent": "centre"
+  },
+  {
+   "name": "bras0b",
+   "pivot": [
+    320,
+    175
+   ],
+   "parent": "bras0a",
+   "spring": {
+    "k": 60,
+    "damp": 7,
+    "gain": 0.9,
+    "wind": 2.5
+   }
+  },
+  {
+   "name": "bras1a",
+   "pivot": [
+    387,
+    318
+   ],
+   "parent": "centre"
+  },
+  {
+   "name": "bras1b",
+   "pivot": [
+    477,
+    289
+   ],
+   "parent": "bras1a",
+   "spring": {
+    "k": 60,
+    "damp": 7,
+    "gain": 0.9,
+    "wind": 2.5
+   }
+  },
+  {
+   "name": "bras2a",
+   "pivot": [
+    361,
+    397
+   ],
+   "parent": "centre"
+  },
+  {
+   "name": "bras2b",
+   "pivot": [
+    417,
+    473
+   ],
+   "parent": "bras2a",
+   "spring": {
+    "k": 60,
+    "damp": 7,
+    "gain": 0.9,
+    "wind": 2.5
+   }
+  },
+  {
+   "name": "bras3a",
+   "pivot": [
+    279,
+    397
+   ],
+   "parent": "centre"
+  },
+  {
+   "name": "bras3b",
+   "pivot": [
+    223,
+    473
+   ],
+   "parent": "bras3a",
+   "spring": {
+    "k": 60,
+    "damp": 7,
+    "gain": 0.9,
+    "wind": 2.5
+   }
+  },
+  {
+   "name": "bras4a",
+   "pivot": [
+    253,
+    318
+   ],
+   "parent": "centre"
+  },
+  {
+   "name": "bras4b",
+   "pivot": [
+    163,
+    289
+   ],
+   "parent": "bras4a",
+   "spring": {
+    "k": 60,
+    "damp": 7,
+    "gain": 0.9,
+    "wind": 2.5
+   }
+  },
+  {
+   "name": "corps",
+   "src": "corps.webp",
+   "pivot": [
+    320,
+    340
+   ],
+   "parent": "centre",
+   "mesh": {
+    "grid": [
+     28,
+     28
+    ],
+    "bones": [
+     {
+      "name": "centre",
+      "radius": 70
+     },
+     {
+      "name": "bras0a",
+      "radius": 55
+     },
+     {
+      "name": "bras0b",
+      "radius": 55,
+      "tip": [
+       320,
+       95
+      ]
+     },
+     {
+      "name": "bras1a",
+      "radius": 55
+     },
+     {
+      "name": "bras1b",
+      "radius": 55,
+      "tip": [
+       553,
+       264
+      ]
+     },
+     {
+      "name": "bras2a",
+      "radius": 55
+     },
+     {
+      "name": "bras2b",
+      "radius": 55,
+      "tip": [
+       464,
+       538
+      ]
+     },
+     {
+      "name": "bras3a",
+      "radius": 55
+     },
+     {
+      "name": "bras3b",
+      "radius": 55,
+      "tip": [
+       176,
+       538
+      ]
+     },
+     {
+      "name": "bras4a",
+      "radius": 55
+     },
+     {
+      "name": "bras4b",
+      "radius": 55,
+      "tip": [
+       87,
+       264
+      ]
+     }
+    ],
+    "falloff": 3,
+    "weights": "os",
+    "smooth": 6
+   }
+  },
+  {
+   "name": "yeux",
+   "src": "yeux.webp",
+   "pivot": [
+    320,
+    340
+   ],
+   "parent": "centre",
+   "mesh": {
+    "grid": [
+     28,
+     28
+    ],
+    "bones": [
+     {
+      "name": "centre",
+      "radius": 70
+     },
+     {
+      "name": "bras0a",
+      "radius": 55
+     },
+     {
+      "name": "bras0b",
+      "radius": 55,
+      "tip": [
+       320,
+       95
+      ]
+     },
+     {
+      "name": "bras1a",
+      "radius": 55
+     },
+     {
+      "name": "bras1b",
+      "radius": 55,
+      "tip": [
+       553,
+       264
+      ]
+     },
+     {
+      "name": "bras2a",
+      "radius": 55
+     },
+     {
+      "name": "bras2b",
+      "radius": 55,
+      "tip": [
+       464,
+       538
+      ]
+     },
+     {
+      "name": "bras3a",
+      "radius": 55
+     },
+     {
+      "name": "bras3b",
+      "radius": 55,
+      "tip": [
+       176,
+       538
+      ]
+     },
+     {
+      "name": "bras4a",
+      "radius": 55
+     },
+     {
+      "name": "bras4b",
+      "radius": 55,
+      "tip": [
+       87,
+       264
+      ]
+     }
+    ],
+    "falloff": 3,
+    "weights": "os",
+    "smooth": 6
+   }
+  },
+  {
+   "name": "bouche",
+   "src": "bouche.webp",
+   "pivot": [
+    320,
+    340
+   ],
+   "parent": "centre",
+   "mesh": {
+    "grid": [
+     28,
+     28
+    ],
+    "bones": [
+     {
+      "name": "centre",
+      "radius": 70
+     },
+     {
+      "name": "bras0a",
+      "radius": 55
+     },
+     {
+      "name": "bras0b",
+      "radius": 55,
+      "tip": [
+       320,
+       95
+      ]
+     },
+     {
+      "name": "bras1a",
+      "radius": 55
+     },
+     {
+      "name": "bras1b",
+      "radius": 55,
+      "tip": [
+       553,
+       264
+      ]
+     },
+     {
+      "name": "bras2a",
+      "radius": 55
+     },
+     {
+      "name": "bras2b",
+      "radius": 55,
+      "tip": [
+       464,
+       538
+      ]
+     },
+     {
+      "name": "bras3a",
+      "radius": 55
+     },
+     {
+      "name": "bras3b",
+      "radius": 55,
+      "tip": [
+       176,
+       538
+      ]
+     },
+     {
+      "name": "bras4a",
+      "radius": 55
+     },
+     {
+      "name": "bras4b",
+      "radius": 55,
+      "tip": [
+       87,
+       264
+      ]
+     }
+    ],
+    "falloff": 3,
+    "weights": "os",
+    "smooth": 6
+   }
+  }
+ ],
+ "anims": {
+  "idle": {
+   "dur": 2400,
+   "loop": true,
+   "tracks": {
+    "bras0a": [
+     {
+      "t": 0,
+      "rot": 0
+     },
+     {
+      "t": 600,
+      "rot": 0.32,
+      "ease": "inOutSine"
+     },
+     {
+      "t": 1500,
+      "rot": -0.28,
+      "ease": "inOutSine"
+     },
+     {
+      "t": 2400,
+      "rot": 0,
+      "ease": "inOutSine"
+     }
+    ],
+    "bras0b": [
+     {
+      "t": 0,
+      "rot": 0
+     },
+     {
+      "t": 750,
+      "rot": 0.45,
+      "ease": "inOutSine"
+     },
+     {
+      "t": 1650,
+      "rot": -0.4,
+      "ease": "inOutSine"
+     },
+     {
+      "t": 2400,
+      "rot": 0,
+      "ease": "inOutSine"
+     }
+    ],
+    "bras1a": [
+     {
+      "t": 0,
+      "rot": 0
+     },
+     {
+      "t": 780,
+      "rot": 0.32,
+      "ease": "inOutSine"
+     },
+     {
+      "t": 1680,
+      "rot": -0.28,
+      "ease": "inOutSine"
+     },
+     {
+      "t": 2400,
+      "rot": 0,
+      "ease": "inOutSine"
+     }
+    ],
+    "bras1b": [
+     {
+      "t": 0,
+      "rot": 0
+     },
+     {
+      "t": 930,
+      "rot": 0.45,
+      "ease": "inOutSine"
+     },
+     {
+      "t": 1830,
+      "rot": -0.4,
+      "ease": "inOutSine"
+     },
+     {
+      "t": 2400,
+      "rot": 0,
+      "ease": "inOutSine"
+     }
+    ],
+    "bras2a": [
+     {
+      "t": 0,
+      "rot": 0
+     },
+     {
+      "t": 960,
+      "rot": 0.32,
+      "ease": "inOutSine"
+     },
+     {
+      "t": 1860,
+      "rot": -0.28,
+      "ease": "inOutSine"
+     },
+     {
+      "t": 2400,
+      "rot": 0,
+      "ease": "inOutSine"
+     }
+    ],
+    "bras2b": [
+     {
+      "t": 0,
+      "rot": 0
+     },
+     {
+      "t": 1110,
+      "rot": 0.45,
+      "ease": "inOutSine"
+     },
+     {
+      "t": 2010,
+      "rot": -0.4,
+      "ease": "inOutSine"
+     },
+     {
+      "t": 2400,
+      "rot": 0,
+      "ease": "inOutSine"
+     }
+    ],
+    "bras3a": [
+     {
+      "t": 0,
+      "rot": 0
+     },
+     {
+      "t": 1140,
+      "rot": 0.32,
+      "ease": "inOutSine"
+     },
+     {
+      "t": 2040,
+      "rot": -0.28,
+      "ease": "inOutSine"
+     },
+     {
+      "t": 2400,
+      "rot": 0,
+      "ease": "inOutSine"
+     }
+    ],
+    "bras3b": [
+     {
+      "t": 0,
+      "rot": 0
+     },
+     {
+      "t": 1290,
+      "rot": 0.45,
+      "ease": "inOutSine"
+     },
+     {
+      "t": 2190,
+      "rot": -0.4,
+      "ease": "inOutSine"
+     },
+     {
+      "t": 2400,
+      "rot": 0,
+      "ease": "inOutSine"
+     }
+    ],
+    "bras4a": [
+     {
+      "t": 0,
+      "rot": 0
+     },
+     {
+      "t": 1320,
+      "rot": 0.32,
+      "ease": "inOutSine"
+     },
+     {
+      "t": 2220,
+      "rot": -0.28,
+      "ease": "inOutSine"
+     },
+     {
+      "t": 2400,
+      "rot": 0,
+      "ease": "inOutSine"
+     }
+    ],
+    "bras4b": [
+     {
+      "t": 0,
+      "rot": 0
+     },
+     {
+      "t": 1470,
+      "rot": 0.45,
+      "ease": "inOutSine"
+     },
+     {
+      "t": 2370,
+      "rot": -0.4,
+      "ease": "inOutSine"
+     },
+     {
+      "t": 2400,
+      "rot": 0,
+      "ease": "inOutSine"
+     }
+    ],
+    "centre": [
+     {
+      "t": 0,
+      "sx": 1,
+      "sy": 1
+     },
+     {
+      "t": 1200,
+      "sx": 1.04,
+      "sy": 0.96,
+      "ease": "inOutSine"
+     },
+     {
+      "t": 2400,
+      "sx": 1,
+      "sy": 1,
+      "ease": "inOutSine"
+     }
+    ]
+   }
+  }
+ }
+}

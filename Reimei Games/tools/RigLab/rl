@@ -1,0 +1,5 @@
+#!/bin/sh
+# Rig Lab : la ligne de commande (Mac / Linux). Utilise le Python de .venv créé par installer.command
+ICI="$(cd "$(dirname "$0")" && pwd)"
+PY="$ICI/.venv/bin/python"; [ -x "$PY" ] || PY=python3
+exec "$PY" "$ICI/riglab/tools/rl.py" "$@"

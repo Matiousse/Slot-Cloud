@@ -1,0 +1,635 @@
+{
+ "size": [
+  529,
+  540
+ ],
+ "mix": 140,
+ "parts": [
+  {
+   "name": "socle",
+   "pivot": [
+    265,
+    520
+   ]
+  },
+  {
+   "name": "haut",
+   "pivot": [
+    265,
+    280
+   ],
+   "parent": "socle"
+  },
+  {
+   "name": "corps",
+   "src": "corps.webp",
+   "pivot": [
+    265,
+    520
+   ],
+   "parent": "socle",
+   "mesh": {
+    "grid": [
+     8,
+     8
+    ],
+    "bones": [
+     {
+      "name": "socle",
+      "radius": 178
+     },
+     {
+      "name": "haut",
+      "radius": 178
+     }
+    ],
+    "falloff": 2.5
+   },
+   "shine": {
+    "angle": 20,
+    "width": 0.16,
+    "strength": 0.85,
+    "color": "#fff4d6"
+   }
+  },
+  {
+   "name": "couronne",
+   "src": "couronne.webp",
+   "pivot": [
+    265,
+    210
+   ],
+   "parent": "haut",
+   "spring": {
+    "k": 80,
+    "damp": 6,
+    "gain": 1.4
+   }
+  },
+  {
+   "name": "gemme",
+   "src": "gemme.webp",
+   "pivot": [
+    250,
+    128
+   ],
+   "parent": "couronne",
+   "blend": "add",
+   "offset": [
+    126,
+    4
+   ]
+  },
+  {
+   "name": "yeux",
+   "src": "yeux.webp",
+   "pivot": [
+    265,
+    305
+   ],
+   "parent": "haut",
+   "blend": "add",
+   "offset": [
+    135,
+    244
+   ]
+  }
+ ],
+ "emitters": {
+  "etoiles": {
+   "part": "couronne",
+   "at": [
+    265,
+    90
+   ],
+   "area": [
+    380,
+    120
+   ],
+   "tex": "star",
+   "color": [
+    "#fff3c4",
+    "#ffd36b"
+   ],
+   "speed": [
+    30,
+    90
+   ],
+   "angle": -90,
+   "spread": 360,
+   "gravity": 0,
+   "drag": 2,
+   "life": [
+    450,
+    800
+   ],
+   "scale": [
+    0.35,
+    0.7
+   ],
+   "scaleEnd": 0,
+   "spin": [
+    -2,
+    2
+   ],
+   "fadeIn": 0.15,
+   "blend": "add"
+  }
+ },
+ "anims": {
+  "idle": {
+   "dur": 2800,
+   "loop": true,
+   "tracks": {
+    "haut": [
+     {
+      "y": 0,
+      "sx": 1,
+      "t": 0
+     },
+     {
+      "y": -4.32,
+      "sx": 1.012,
+      "ease": "inOutSine",
+      "t": 1400.0
+     },
+     {
+      "y": 0,
+      "sx": 1,
+      "ease": "inOutSine",
+      "t": 2800
+     }
+    ],
+    "gemme": [
+     {
+      "alpha": 0.2,
+      "t": 0
+     },
+     {
+      "alpha": 0.6,
+      "ease": "inOutSine",
+      "t": 1400.0
+     },
+     {
+      "alpha": 0.2,
+      "ease": "inOutSine",
+      "t": 2800
+     }
+    ],
+    "yeux": [
+     {
+      "alpha": 0.0,
+      "t": 0
+     },
+     {
+      "alpha": 0.25,
+      "ease": "inOutSine",
+      "t": 1400.0
+     },
+     {
+      "alpha": 0.0,
+      "ease": "inOutSine",
+      "t": 2800
+     }
+    ],
+    "couronne": [
+     {
+      "rot": -0.012,
+      "t": 0
+     },
+     {
+      "rot": 0.012,
+      "ease": "inOutSine",
+      "t": 1400.0
+     },
+     {
+      "rot": -0.012,
+      "ease": "inOutSine",
+      "t": 2800
+     }
+    ]
+   }
+  },
+  "land": {
+   "dur": 730,
+   "loop": false,
+   "tracks": {
+    "socle": [
+     {
+      "y": -37.800000000000004,
+      "sx": 0.97,
+      "sy": 1.04,
+      "t": 0
+     },
+     {
+      "y": 0,
+      "sx": 1,
+      "sy": 1,
+      "ease": "inQuad",
+      "t": 110
+     },
+     {
+      "sx": 1.1,
+      "sy": 0.87,
+      "ease": "outQuad",
+      "t": 170
+     },
+     {
+      "sx": 0.97,
+      "sy": 1.04,
+      "ease": "inOutQuad",
+      "t": 320
+     },
+     {
+      "sx": 1.01,
+      "sy": 0.99,
+      "t": 470
+     },
+     {
+      "sx": 1,
+      "sy": 1,
+      "ease": "outQuad",
+      "t": 730
+     }
+    ],
+    "haut": [
+     {
+      "y": -15.389999999999999,
+      "sx": 1,
+      "t": 0
+     },
+     {
+      "y": 0,
+      "sx": 1,
+      "t": 110
+     },
+     {
+      "y": 51.3,
+      "sx": 1.09,
+      "ease": "outQuad",
+      "t": 190
+     },
+     {
+      "y": -16.416,
+      "sx": 0.97,
+      "ease": "inOutQuad",
+      "t": 350
+     },
+     {
+      "y": 4.104,
+      "sx": 1.01,
+      "t": 510
+     },
+     {
+      "y": 0,
+      "sx": 1,
+      "ease": "outQuad",
+      "t": 730
+     }
+    ],
+    "couronne": [
+     {
+      "y": -18,
+      "t": 0
+     },
+     {
+      "y": 0,
+      "ease": "inQuad",
+      "t": 150
+     },
+     {
+      "y": -9,
+      "ease": "outQuad",
+      "t": 240
+     },
+     {
+      "y": 0,
+      "ease": "inQuad",
+      "t": 330
+     },
+     {
+      "y": 0,
+      "t": 730
+     }
+    ],
+    "gemme": [
+     {
+      "alpha": 0.2,
+      "t": 0
+     }
+    ],
+    "yeux": [
+     {
+      "alpha": 0.2,
+      "t": 0
+     }
+    ]
+   },
+   "events": [
+    {
+     "t": 110,
+     "name": "pose"
+    }
+   ]
+  },
+  "win": {
+   "dur": 1370,
+   "loop": false,
+   "tracks": {
+    "socle": [
+     {
+      "sx": 1,
+      "sy": 1,
+      "t": 0
+     },
+     {
+      "sx": 1.05,
+      "sy": 0.94,
+      "ease": "outQuad",
+      "t": 120
+     },
+     {
+      "sx": 1.12,
+      "sy": 1.12,
+      "ease": "outBackBig",
+      "t": 290
+     },
+     {
+      "sx": 1.1,
+      "sy": 1.1,
+      "t": 1100
+     },
+     {
+      "sx": 1,
+      "sy": 1,
+      "ease": "inOutCubic",
+      "t": 1370
+     }
+    ],
+    "haut": [
+     {
+      "y": 0,
+      "t": 0
+     },
+     {
+      "y": 28.215,
+      "ease": "outQuad",
+      "t": 120
+     },
+     {
+      "y": -25.65,
+      "ease": [
+       0.2,
+       1.8,
+       0.4,
+       1
+      ],
+      "t": 300
+     },
+     {
+      "y": -6.156,
+      "t": 620
+     },
+     {
+      "y": -10.26,
+      "t": 1000
+     },
+     {
+      "y": 0,
+      "ease": "inOutCubic",
+      "t": 1370
+     }
+    ],
+    "corps": [
+     {
+      "flash": 0,
+      "t": 0
+     },
+     {
+      "flash": 0.35,
+      "ease": "outQuad",
+      "t": 290
+     },
+     {
+      "shine": 0,
+      "t": 330
+     },
+     {
+      "flash": 0.05,
+      "t": 700
+     },
+     {
+      "shine": 1,
+      "ease": [
+       0.12,
+       0.72,
+       0.12,
+       1
+      ],
+      "t": 1030
+     },
+     {
+      "flash": 0,
+      "t": 1370
+     }
+    ],
+    "couronne": [
+     {
+      "y": 0,
+      "rot": 0,
+      "flash": 0,
+      "t": 0
+     },
+     {
+      "y": 6,
+      "ease": "outQuad",
+      "t": 120
+     },
+     {
+      "y": -34,
+      "rot": -0.1,
+      "flash": 0.6,
+      "ease": "outCubic",
+      "t": 300
+     },
+     {
+      "y": 0,
+      "rot": 0.06,
+      "flash": 0.2,
+      "ease": "inQuad",
+      "t": 430
+     },
+     {
+      "y": -7,
+      "rot": -0.03,
+      "ease": "outQuad",
+      "t": 520
+     },
+     {
+      "y": 0,
+      "rot": 0,
+      "ease": "inQuad",
+      "t": 610
+     },
+     {
+      "y": 0,
+      "flash": 0,
+      "t": 1370
+     }
+    ],
+    "gemme": [
+     {
+      "alpha": 0.3,
+      "sx": 1,
+      "sy": 1,
+      "t": 0
+     },
+     {
+      "alpha": 1,
+      "sx": 1.8,
+      "sy": 1.8,
+      "ease": "outQuad",
+      "t": 300
+     },
+     {
+      "alpha": 0.3,
+      "sx": 1,
+      "sy": 1,
+      "t": 1370
+     }
+    ],
+    "yeux": [
+     {
+      "alpha": 0,
+      "t": 0
+     },
+     {
+      "alpha": 0.9,
+      "ease": "outQuad",
+      "t": 330
+     },
+     {
+      "alpha": 0.7,
+      "t": 1100
+     },
+     {
+      "alpha": 0,
+      "t": 1370
+     }
+    ]
+   },
+   "events": [
+    {
+     "t": 0,
+     "name": "gain"
+    },
+    {
+     "t": 300,
+     "emit": "etoiles",
+     "n": 9
+    },
+    {
+     "t": 300,
+     "rate": [
+      "etoiles",
+      9
+     ]
+    },
+    {
+     "t": 1000,
+     "rate": [
+      "etoiles",
+      0
+     ]
+    }
+   ]
+  },
+  "remove": {
+   "dur": 330,
+   "loop": false,
+   "tracks": {
+    "socle": [
+     {
+      "sx": 1,
+      "sy": 1,
+      "alpha": 1,
+      "t": 0
+     },
+     {
+      "sx": 1.12,
+      "sy": 1.12,
+      "ease": "outQuad",
+      "t": 90
+     },
+     {
+      "sx": 0.15,
+      "sy": 0.15,
+      "alpha": 0,
+      "ease": "inCubic",
+      "t": 330
+     }
+    ],
+    "corps": [
+     {
+      "flash": 0,
+      "t": 0
+     },
+     {
+      "flash": 0.8,
+      "ease": "outQuad",
+      "t": 90
+     },
+     {
+      "flash": 0.2,
+      "t": 250
+     }
+    ],
+    "gemme": [
+     {
+      "alpha": 0.2,
+      "t": 0
+     }
+    ],
+    "yeux": [
+     {
+      "alpha": 0.2,
+      "t": 0
+     }
+    ]
+   }
+  },
+  "eclat": {
+   "dur": 600,
+   "loop": false,
+   "tracks": {
+    "corps": [
+     {
+      "flash": 0,
+      "t": 0
+     },
+     {
+      "flash": 0.45,
+      "ease": "outQuad",
+      "t": 120
+     },
+     {
+      "flash": 0,
+      "t": 600
+     }
+    ],
+    "gemme": [
+     {
+      "alpha": 0.2,
+      "t": 0
+     }
+    ],
+    "yeux": [
+     {
+      "alpha": 0.2,
+      "t": 0
+     }
+    ]
+   }
+  }
+ }
+}

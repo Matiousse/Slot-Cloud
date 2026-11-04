@@ -1,0 +1,11 @@
+RIG LAB 2 — l'atelier de rig et d'animation des symboles de slot
+
+1. Dézippe ce dossier où tu veux (Bureau, Documents…).
+2. Ouvre l'appli Claude → onglet « Code » → choisis ce dossier « RigLab ».
+   (ou dans un terminal : cd vers le dossier, puis tape : claude)
+3. Écris à Claude : « Installe Rig Lab et démarre ».
+
+C'est tout : ton Claude installe tout seul ce qu'il faut (Python, Node, ffmpeg, le moteur de rendu, ses skills d'animation),
+vérifie que ça marche, t'envoie une vidéo de test et te demande quel symbole on améliore.
+Ensuite tu lui envoies tes images et tu regardes les vidéos qu'il te renvoie.
+Si l'installation demande ton mot de passe (Homebrew sur Mac), il te donne la ligne à coller dans le Terminal.

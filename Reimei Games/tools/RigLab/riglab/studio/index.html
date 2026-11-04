@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Rig Lab</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2315171d'/%3E%3Cpath d='M9 23l7-14 7 14' fill='none' stroke='%23f5b942' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='16' cy='9' r='3' fill='%23f5b942'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="./studio.css">
+</head>
+<body>
+<div id="app" class="mode-animer">
+
+  <!-- ============ barre du haut ============ -->
+  <header id="top">
+    <div class="brand" title="Rig Lab — Vantrel">
+      <svg viewBox="0 0 32 32" width="22" height="22"><path d="M9 23l7-14 7 14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="16" cy="9" r="3" fill="currentColor"/></svg>
+      <span>RIG LAB</span>
+    </div>
+    <button id="crumb" class="crumb" title="Tous les symboles">
+      <span id="crumbP">—</span><i class="sep">/</i><b id="crumbS">—</b><span class="chev"></span>
+    </button>
+    <nav id="modes" class="seg">
+      <button data-mode="decoupe"><span class="ic" data-ic="scissors"></span>Découpe</button>
+      <button data-mode="rig"><span class="ic" data-ic="bone"></span>Rig</button>
+      <button data-mode="animer" class="on"><span class="ic" data-ic="keyframe"></span>Animer</button>
+      <button data-mode="apercu"><span class="ic" data-ic="play"></span>Aperçu</button>
+    </nav>
+    <div class="grow"></div>
+    <div class="tb-group">
+      <button id="bUndo" class="icon-btn" title="Annuler (⌘Z)"><span class="ic" data-ic="undo"></span></button>
+      <button id="bRedo" class="icon-btn" title="Rétablir (⇧⌘Z)"><span class="ic" data-ic="redo"></span></button>
+    </div>
+    <button id="bControle" class="pill" title="Contrôle qualité de l'animation"><span class="ic" data-ic="check"></span><span id="noteTxt">Contrôle</span></button>
+    <div id="saveState" class="save-state"><i></i><span>Enregistré</span></div>
+    <button id="bSave" class="btn primary" title="Enregistrer (⌘S)">Enregistrer</button>
+    <button id="bMenu" class="icon-btn" title="Plus"><span class="ic" data-ic="more"></span></button>
+  </header>
+
+  <!-- ============ colonne gauche ============ -->
+  <aside id="left">
+    <section class="panel" id="pParts">
+      <div class="ph"><h3>Pièces</h3><div class="ph-act">
+        <button class="icon-btn sm rig-only" id="bAddBone" title="Ajouter un os"><span class="ic" data-ic="plus"></span></button>
+        <button class="icon-btn sm" id="bShowBones" title="Afficher les os"><span class="ic" data-ic="bone"></span></button>
+      </div></div>
+      <div id="tree" class="tree"></div>
+    </section>
+    <section class="panel" id="pAnims">
+      <div class="ph"><h3>Animations</h3><div class="ph-act">
+        <button class="icon-btn sm" id="bAnimAdd" title="Nouvelle animation"><span class="ic" data-ic="plus"></span></button>
+      </div></div>
+      <div id="anims" class="list"></div>
+    </section>
+  </aside>
+
+  <!-- ============ scène ============ -->
+  <main id="stage">
+    <div id="view"></div>
+    <div id="tools" class="float tools">
+      <button data-tool="select" class="on" title="Sélection et déplacement (V)"><span class="ic" data-ic="cursor"></span><kbd>V</kbd></button>
+      <button data-tool="rotate" class="anim-only" title="Rotation (R)"><span class="ic" data-ic="rotate"></span><kbd>R</kbd></button>
+      <button data-tool="scale" class="anim-only" title="Échelle (S) — Maj : proportionnel"><span class="ic" data-ic="scale"></span><kbd>S</kbd></button>
+      <button data-tool="ffd" class="anim-only" title="Déformer le maillage (D)"><span class="ic" data-ic="mesh"></span><kbd>D</kbd></button>
+      <i class="div rig-only"></i>
+      <button data-tool="pivot" class="rig-only" title="Pivot (P)"><span class="ic" data-ic="pivot"></span><kbd>P</kbd></button>
+    </div>
+    <div id="viewOpts" class="float view-opts">
+      <button id="vOnion" class="chip" title="Pelure d'oignon (O)"><span class="ic" data-ic="onion"></span>Oignon</button>
+      <button id="vCell" class="chip on" title="Case du jeu"><span class="ic" data-ic="square"></span>Case</button>
+      <button id="vPath" class="chip" title="Trajectoire de la pièce choisie"><span class="ic" data-ic="path"></span>Trajet</button>
+      <span class="vsep"></span>
+      <button id="vZoomOut" class="icon-btn sm" title="Dézoomer">−</button>
+      <button id="vZoom" class="zoom-val" title="Recadrer (F)">100 %</button>
+      <button id="vZoomIn" class="icon-btn sm" title="Zoomer">+</button>
+    </div>
+    <div id="ffdOpts" class="float ffd-opts" hidden>
+      <span>Rayon</span><input type="range" id="ffdR" min="0" max="400" value="90"><output id="ffdRv">90</output>
+      <button id="ffdReset" class="btn sm">Remettre à plat</button>
+    </div>
+    <div id="hint" class="hint"></div>
+    <div id="toast" class="toast" hidden></div>
+
+    <!-- aperçu propre -->
+    <div id="apercuBar" class="float apercu-bar"></div>
+    <div id="apercuSide" class="float apercu-side"></div>
+
+    <!-- découpe -->
+    <div id="decoupeBar" class="float decoupe-bar"></div>
+  </main>
+
+  <!-- ============ inspecteur ============ -->
+  <aside id="right">
+    <div id="insp" class="insp"></div>
+  </aside>
+
+  <!-- ============ timeline ============ -->
+  <footer id="timeline">
+    <div id="tlResize" class="tl-resize" title="Glisser pour agrandir"></div>
+    <div class="transport">
+      <div class="tr-group">
+        <button id="tStart" class="icon-btn" title="Début (Début)"><span class="ic" data-ic="start"></span></button>
+        <button id="tPrevKey" class="icon-btn" title="Clé précédente (,)"><span class="ic" data-ic="prevkey"></span></button>
+        <button id="tPlay" class="play" title="Lecture (Espace)"><span class="ic" data-ic="play"></span></button>
+        <button id="tNextKey" class="icon-btn" title="Clé suivante (;)"><span class="ic" data-ic="nextkey"></span></button>
+        <button id="tEnd" class="icon-btn" title="Fin (Fin)"><span class="ic" data-ic="end"></span></button>
+      </div>
+      <div class="time-box"><input id="tTime" value="0" spellcheck="false"><span>/</span><input id="tDur" value="0" spellcheck="false"><span class="u">ms</span></div>
+      <button id="tLoop" class="chip on" title="Boucler la lecture"><span class="ic" data-ic="loop"></span></button>
+      <select id="tSpeed" class="sel" title="Vitesse de lecture"><option value="0.1">×0,1</option><option value="0.25">×0,25</option><option value="0.5">×0,5</option><option value="1" selected>×1</option><option value="2">×2</option></select>
+      <select id="tSnap" class="sel" title="Magnétisme"><option value="1">1 ms</option><option value="10" selected>10 ms</option><option value="16.6667">60 i/s</option><option value="33.3333">30 i/s</option><option value="50">50 ms</option></select>
+      <span class="vsep"></span>
+      <button id="tAuto" class="rec on" title="Clé automatique : chaque réglage pose une clé"><i></i>Auto-clé</button>
+      <button id="tKey" class="btn sm" title="Poser une clé sur la sélection (K)"><span class="ic" data-ic="keyframe"></span>Clé</button>
+      <span class="vsep"></span>
+      <div class="seg sm" id="tView"><button data-v="dope" class="on">Clés</button><button data-v="graph">Courbes</button></div>
+      <div class="grow"></div>
+      <select id="tLayer" class="sel" title="Superposer une animation (piste 1)"><option value="">Superposer : aucune</option></select>
+      <button id="tRecettes" class="btn accent sm" title="Gestes d'animation studio prêts à poser"><span class="ic" data-ic="spark"></span>Recettes</button>
+    </div>
+    <div id="tlBody" class="tl-body"></div>
+  </footer>
+</div>
+
+<!-- feuilles et menus -->
+<div id="sheet" class="sheet" hidden></div>
+<div id="menu" class="menu" hidden></div>
+<div id="modal" class="modal-back" hidden><div class="modal" id="modalBox"></div></div>
+<div id="home" class="home" hidden></div>
+
+<script type="module" src="./js/app.js"></script>
+</body>
+</html>
