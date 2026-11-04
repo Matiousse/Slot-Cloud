@@ -5,7 +5,7 @@ import { MODES, PAYTABLE, S, TARGET_RTP, WINCAP_X, TIERS, TIP_MULT, RUSH_COUNTS 
 
 const WORDS = {
   normal: { bet: 'BET', buy: 'BUY BONUS', buyShort: 'BUY', pays: 'PAYS', paytable: 'PAYTABLE', cost: 'COST', ante: 'ANTE' },
-  social: { bet: 'PLAY', buy: 'GET BONUS', buyShort: 'GET', pays: 'AWARDS', paytable: 'AWARD TABLE', cost: 'PRICE', ante: 'BOOST' },
+  social: { bet: 'SPIN', buy: 'PLAY BONUS', buyShort: 'PLAY', pays: 'AWARDS', paytable: 'AWARD TABLE', cost: 'PRICE', ante: 'BOOST' },
 };
 
 export interface HudEvents {
@@ -48,7 +48,7 @@ export class Hud {
   private q = <T extends HTMLElement = HTMLElement>(s: string) => this.el.querySelector(s) as T;
   private anteOn = false;
   private turboOn = false;
-  private soundOn = true;
+  private soundOn = (() => { try { return localStorage.getItem('pizza-rush-sound') !== 'off'; } catch { return true; } })();
   private autoIdx = 0;
   private bet = 1_000_000;
   canBuy = true;

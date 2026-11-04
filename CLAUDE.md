@@ -12,6 +12,11 @@
   Games à gauche, spin à droite), police « ballon » Modak (OFL) partout. Polices : toujours sous licence libre (OFL).
 - « Lancer en local » = l'utilisateur ne voit pas le localhost du conteneur : construire et publier en artifact.
 
+## Ressources (fouille GitHub, licences commerciales OK)
+Avant de créer quoi que ce soit, regarder `Reimei Games/tools/ressources/` : docs officielles Stake Engine (RGS, format des
+maths, mots du mode social), techniques de son synthétisé (réverbération, rouleaux spatialisés), bonnes pratiques de
+rouleaux, 175 fiches de maths slotopol, et `prompts-slots.md` (prompts d'images testés). N'utiliser que du CC0/MIT/OFL/CC BY.
+
 ## Animations de symboles : toujours avec Rig Lab
 L'utilisateur veut que **toutes les animations de symboles et de personnages des slots** soient faites avec **Rig Lab 2**
 (`Reimei Games/tools/RigLab/`). Le conteneur cloud est éphémère : à chaque nouvelle session, avant d'animer,

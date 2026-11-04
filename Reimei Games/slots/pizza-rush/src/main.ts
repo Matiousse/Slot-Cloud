@@ -88,6 +88,7 @@ async function boot() {
       setCurrency(q('currency') || 'USD');
     } else {
       const auth = await game.init(q('lang') || 'en');
+      if (q('social') === 'true') hud.setSocial(true); // Stake : le mode social peut aussi venir de l'URL
       setCurrency(auth.currency);
       game.refresh();
       resumeRound = auth.round;

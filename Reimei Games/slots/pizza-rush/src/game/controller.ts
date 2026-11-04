@@ -415,6 +415,7 @@ export class Game {
       { at: 40, name: 'MEGA WIN' },
       { at: 100, name: 'PIZZA PARTY!' },
     ].filter((l) => x >= l.at);
+    for (const c of st.fx.children) c.visible = false; // l'affichage du gain précédent s'efface
     const g = new PIXI.Container();
     g.addChild(new PIXI.Graphics().rect(-3000, -3000, 6000, 6000).fill({ color: 0x000000, alpha: 0.6 }));
     const c = st.boardCenter;
@@ -433,7 +434,7 @@ export class Game {
     this.skipReq = false;
     const dur = Math.min(6000, 2200 + levels.length * 1200);
     let lvl = 0;
-    let lastTick = 0;
+    audio.countStart();
     await new Promise<void>((resolve) => {
       const t0 = performance.now();
       const id = setInterval(() => {
@@ -449,12 +450,9 @@ export class Game {
           audio.play('winBig');
           st.tony.play('grosgain', { then: 'idle' });
         }
-        if (performance.now() - lastTick > 90) {
-          audio.play('tick');
-          lastTick = performance.now();
-        }
         if (k >= 1) {
           clearInterval(id);
+          audio.countStop();
           resolve();
         }
       }, 33);

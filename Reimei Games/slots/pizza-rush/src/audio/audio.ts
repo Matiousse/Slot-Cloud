@@ -17,7 +17,7 @@ class AudioEngine {
   private comp!: DynamicsCompressorNode;
   private noiseBuf!: AudioBuffer;
   private plucks = new Map<string, AudioBuffer>();
-  enabled = true;
+  enabled = (() => { try { return localStorage.getItem('pizza-rush-sound') !== 'off'; } catch { return true; } })();
   private music: Music = null;
   private seqTimer = 0;
   private nextT = 0;
@@ -41,6 +41,11 @@ class AudioEngine {
       this.mus.gain.value = 0.32;
       this.sfx.connect(this.comp);
       this.mus.connect(this.comp);
+      // la salle de la pizzeria : réverbération de Schroeder (4 filtres en peigne amortis + 2 passe-tout par côté),
+      // technique reprise de open-source-slots (MIT). Les deux bus y envoient un peu de signal.
+      const rev = this.reverb(c);
+      const sendS = c.createGain(); sendS.gain.value = 0.22; this.sfx.connect(sendS).connect(rev);
+      const sendM = c.createGain(); sendM.gain.value = 0.16; this.mus.connect(sendM).connect(rev);
       this.comp.connect(this.master);
       this.master.connect(c.destination);
       const n = c.createBuffer(1, c.sampleRate, c.sampleRate);
@@ -58,11 +63,68 @@ class AudioEngine {
 
   setEnabled(on: boolean) {
     this.enabled = on;
+    try { localStorage.setItem('pizza-rush-sound', on ? 'on' : 'off'); } catch { /* stockage indisponible : réglage non mémorisé */ }
     if (!this.ctx) return;
     this.master.gain.setTargetAtTime(on ? 0.9 : 0, this.ctx.currentTime, 0.05);
   }
 
   // ------------------------------------------------------------ briques
+  private reverb(c: AudioContext): AudioNode {
+    const input = c.createGain();
+    const pre = c.createDelay(0.1); pre.delayTime.value = 0.018;
+    const hp = c.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 220;
+    input.connect(pre).connect(hp);
+    const merger = c.createChannelMerger(2);
+    const wet = c.createGain(); wet.gain.value = 0.9;
+    merger.connect(wet).connect(this.comp);
+    const RT60 = 1.1; // petite salle chaleureuse, pas une cathédrale
+    for (const side of [0, 1]) {
+      const spread = side * 0.0011;
+      const combs = c.createGain(); combs.gain.value = 0.25;
+      for (const d0 of [0.0297, 0.0371, 0.0411, 0.0437]) {
+        const d = d0 + spread;
+        const sum = c.createGain();
+        const line = c.createDelay(0.1); line.delayTime.value = d;
+        const damp = c.createBiquadFilter(); damp.type = 'lowpass'; damp.frequency.value = side ? 2800 : 3500; damp.Q.value = -3.01;
+        const fb = c.createGain(); fb.gain.value = 10 ** ((-3 * d) / RT60);
+        hp.connect(sum); sum.connect(line); line.connect(damp); damp.connect(fb); fb.connect(sum); line.connect(combs);
+      }
+      let node: AudioNode = combs;
+      for (const d of [0.005, 0.0034]) {
+        const w = c.createGain(); const line = c.createDelay(0.05); line.delayTime.value = d + spread * 0.3;
+        const fb = c.createGain(); fb.gain.value = 0.7; const ff = c.createGain(); ff.gain.value = -0.7; const y = c.createGain();
+        node.connect(w); w.connect(line); line.connect(fb); fb.connect(w); w.connect(ff); ff.connect(y); line.connect(y);
+        node = y;
+      }
+      node.connect(merger, 0, side);
+    }
+    return input;
+  }
+
+  /** Sortie panoramique : chaque rouleau sonne depuis sa place (de gauche à droite). */
+  private panned(p: number): AudioNode {
+    const c = this.ctx!;
+    if (!c.createStereoPanner) return this.sfx;
+    const n = c.createStereoPanner(); n.pan.value = Math.max(-1, Math.min(1, p)); n.connect(this.sfx);
+    return n;
+  }
+
+  // comptage musical pendant que le gain défile (arpège de mandoline, gauche/droite)
+  private countTimer = 0;
+  countStart() {
+    if (!this.ctx || !this.enabled || this.countTimer) return;
+    const fig = ['A4', 'C5', 'E5', 'C5', 'A5', 'E5', 'C5', 'E5'].map(NOTE);
+    let i = 0;
+    this.countTimer = window.setInterval(() => {
+      if (!this.ctx) return;
+      this.pluck(fig[i % fig.length], this.ctx.currentTime + 0.01, 0.32, this.panned(i % 2 ? 0.25 : -0.25), 0.4);
+      i++;
+    }, 90);
+  }
+  countStop() {
+    if (this.countTimer) clearInterval(this.countTimer);
+    this.countTimer = 0;
+  }
   private env(g: GainNode, t: number, a: number, peak: number, d: number, sustain = 0, r = 0.08) {
     g.gain.setValueAtTime(0.0001, t);
     g.gain.linearRampToValueAtTime(peak, t + a);
@@ -187,10 +249,12 @@ class AudioEngine {
         break;
       }
       case 'stop': {
-        // planche de bois : bruit grave court + ton boisé, un peu plus aigu à chaque rouleau
-        const o = this.osc('sine', 150 + i * 12, t, 0.12, 0.55, out);
+        // planche de bois + note de mandoline qui monte l'accord de la (A C E A C), de gauche à droite
+        const pan = this.panned(-0.6 + i * 0.3);
+        const o = this.osc('sine', 150 + i * 12, t, 0.12, 0.5, pan);
         o.frequency.exponentialRampToValueAtTime(70, t + 0.12);
-        this.noise(t, 0.05, 0.3, out, 'bandpass', 1400 + i * 120, 2);
+        this.noise(t, 0.05, 0.26, pan, 'bandpass', 1400 + i * 120, 2);
+        this.pluck(NOTE(['A3', 'C4', 'E4', 'A4', 'C5'][i % 5]), t + 0.005, 0.38, pan, 0.6);
         break;
       }
       case 'scatter':
