@@ -24,9 +24,11 @@ Scatter en plus : `suspense` (boucle 2 s, pendant l'attente du dernier rouleau) 
 Rotation des clés : radians (Pixi). Nombres décimaux : toujours avec le zéro (`0.92`, pas `.92`).
 
 ## Tony (personnage, à côté des rouleaux) : `anims/tony/`
-Calques découpés dans la référence Gemini (`art/tony/`) par `atelier/pizza-rush/tony_detoure.py` + `tony_calques.py`,
-rig et animations par `tony_rig.py`. Os : socle (pieds) → bassin → haut (buste) → cou → tête ; bras aux épaules
-(sous les manches). 5 visages permutés par clés `visible` : yeux fermés, rire, choc, triste, clin d'œil.
+Tout se refait avec `sh atelier/pizza-rush/tony_tout.sh` (depuis RigLab) : détourage, calques découpés dans la référence,
+visages, rig, animations. Os : socle (pieds) → bassin → haut (buste) → cou → tête ; bras aux épaules
+(sous les manches). Expressions : la tête ne change JAMAIS ; seuls les traits (yeux, sourcils, bouche) sont posés dessus (`visage-*`, calés sur le nez,
+peau repeinte sous les traits neutres) et permutés d'une image à l'autre, avec un petit écrasement de la tête.
+Visages : yeux fermés (clignement), rire, choc, triste, clin d'œil.
 
 | clip | durée | quand | événements |
 |---|---|---|---|
