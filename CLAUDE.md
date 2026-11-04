@@ -10,6 +10,8 @@
   JAMAIS (ils sont dans le corps) ; casquette d'origine (pas de casquette reconstruite).
 - Interface Pizza Rush : pas de barre en bas ; gros boutons carrés sur les côtés (achat bonus avec le logo Reimei
   Games à gauche, spin à droite), police « ballon » Modak (OFL) partout. Polices : toujours sous licence libre (OFL).
+- Tony est maintenant joué par une VIDÉO Google Flow (respiration/clignement), détourée en planches de sprites
+  (`atelier/pizza-rush/tony_video.py`, 12 i/s, boucle aller-retour). Le rig Rig Lab de Tony reste dans le code (désactivé).
 - « Lancer en local » = l'utilisateur ne voit pas le localhost du conteneur : construire et publier en artifact.
 
 ## Ressources (fouille GitHub, licences commerciales OK)

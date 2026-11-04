@@ -2,6 +2,7 @@
 // Mise en page responsive : paysage (1920×1080) ou portrait (1080×1920), fond toujours plein écran.
 import { PIXI, makeRig, rigSize, updateRigs } from './rigs';
 import { Reels } from './reels';
+import { VideoTony } from './tony-video';
 import { EASE, tween, updateTweens } from './tween';
 import { MAX_TIPS, TIP_MULT } from '../../shared/game';
 
@@ -43,6 +44,7 @@ export class Stage {
   onTap: () => void = () => {};
 
   static async create(parent: HTMLElement, preload: () => Promise<void> = async () => {}) {
+    const tonyVideo = VideoTony.load();
     const app = new PIXI.Application();
     await app.init({ resizeTo: window, background: '#120b10', antialias: true, resolution: Math.min(2, window.devicePixelRatio || 1), autoDensity: true });
     parent.appendChild(app.canvas);
@@ -54,10 +56,10 @@ export class Stage {
       fetch('img/cadre.json').then((r) => r.json()),
       preload(),
     ]);
-    return new Stage(app, day, night, frame, logo, cadre);
+    return new Stage(app, day, night, frame, logo, cadre, await tonyVideo);
   }
 
-  private constructor(app: any, day: any, night: any, frameTex: any, logoTex: any, cadre: { taille: number[]; fenetre: number[] }) {
+  private constructor(app: any, day: any, night: any, frameTex: any, logoTex: any, cadre: { taille: number[]; fenetre: number[] }, tonyVideo: VideoTony) {
     this.app = app;
     this.bgDay = new PIXI.Sprite(day);
     this.bgNight = new PIXI.Sprite(night);
@@ -78,9 +80,9 @@ export class Stage {
     this.logo = new PIXI.Sprite(logoTex);
     this.logo.anchor.set(0.5);
 
-    this.tony = makeRig('tony');
-    this.tony.pivot.set(0, rigSize('tony')[1] / 2); // origine du rig au centre : on l'ancre aux pieds
-    this.tony.play('idle', { loop: true });
+    // Tony : version vidéo (Google Flow). Le rig Rig Lab reste disponible : makeRig('tony'), pivot (0, rigSize('tony')[1] / 2).
+    this.tony = tonyVideo;
+    void rigSize;
 
     this.buildFsPanel();
     this.world.addChild(this.tony, this.frame, this.logo, this.fsPanel, this.fx);
@@ -94,6 +96,7 @@ export class Stage {
       updateTweens(dt);
       this.reels.update(dt);
       updateRigs(dt);
+      this.tony.update?.(dt);
       this.idleBob += dt;
       this.logo.rotation = Math.sin(this.idleBob / 1400) * 0.015;
     });
@@ -181,7 +184,7 @@ export class Stage {
       this.logo.position.set(540, 150);
       this.frame.scale.set(0.92);
       this.frame.position.set(540, 712);
-      this.tony.scale.set(0.36);
+      this.tony.scale.set(0.74);
       this.tony.position.set(540, 1420);
       this.fsPanel.scale.set(0.7);
       this.fsPanel.position.set(880, 1300);
@@ -191,7 +194,7 @@ export class Stage {
       this.logo.position.set(230, 120);
       this.frame.scale.set(0.86);
       this.frame.position.set(1000, 452);
-      this.tony.scale.set(0.44);
+      this.tony.scale.set(0.92);
       this.tony.position.set(455, 1080);
       this.fsPanel.scale.set(0.72);
       this.fsPanel.position.set(1720, 165);
