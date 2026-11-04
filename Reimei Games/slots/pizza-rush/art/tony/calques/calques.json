@@ -5,14 +5,14 @@
  ],
  "bras-d": {
   "pivot": [
-   1212,
-   838
+   1282,
+   792
   ]
  },
  "bras-g": {
   "pivot": [
-   1572,
-   832
+   1542,
+   798
   ]
  },
  "menton": {
@@ -27,18 +27,18 @@
   ]
  },
  "tete-yeux-fermes": {
-  "echelle": 0.6858
+  "echelle": 0.6667
  },
  "tete-rire": {
-  "echelle": 0.6858
+  "echelle": 0.6667
  },
  "tete-choc": {
-  "echelle": 0.6852
+  "echelle": 0.6661
  },
  "tete-triste": {
-  "echelle": 0.6852
+  "echelle": 0.6661
  },
  "tete-clin": {
-  "echelle": 0.6858
+  "echelle": 0.6667
  }
 }

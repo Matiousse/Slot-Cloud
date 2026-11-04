@@ -28,37 +28,24 @@ info = {'taille': [W, H]}
 
 # ---------------------------------------------------------------- bras
 COUPE_Y_TETE = 722
-BRAS = {  # nom : (polygone du bras nu jusqu'à la main, segment de l'ourlet [extérieur, intérieur], pivot épaule)
-    'bras-d': ([(880, 720), (1150, 720), (1162, 780), (1238, 905), (1215, 935), (1170, 980), (1100, 1200), (880, 1200)],
-               [(1162, 782), (1238, 905)], (1212, 838)),
-    'bras-g': ([(1605, 845), (1920, 845), (1920, 1130), (1640, 1130), (1560, 1000), (1532, 915)],
-               [(1605, 845), (1532, 915)], (1572, 832)),
+BRAS = {  # nom : (polygone = manche + bras + main, coupé sur la couture d'épaule, pivot = haut de la couture)
+    'bras-d': [(880, 800), (1160, 770), (1245, 738), (1300, 738), (1314, 790), (1306, 860), (1288, 912), (1240, 918),
+               (1215, 935), (1170, 980), (1100, 1200), (880, 1200)],
+    'bras-g': [(1528, 760), (1920, 760), (1920, 1130), (1640, 1130), (1560, 1000), (1534, 930), (1530, 905), (1526, 830)],
 }
+PIVOTS = {'bras-d': (1282, 792), 'bras-g': (1542, 798)}
 corps = ref.copy()
 corps[:COUPE_Y_TETE] = 0
-for nom, (pts, ourlet, pivot) in BRAS.items():
+for nom, pts in BRAS.items():
     m = poly(ref.shape, pts)
     bras = np.zeros_like(ref); bras[m] = ref[m]
-    # prolonge le haut du bras sous la manche : une gélule couleur peau, avec contour, derrière l'ourlet
-    (x0, y0), (x1, y1) = ourlet
-    cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
-    dx, dy = x1 - x0, y1 - y0; L = np.hypot(dx, dy); nx, ny = -dy / L, dx / L   # normale à l'ourlet
-    # sens « vers l'intérieur de la manche » = opposé à la main
-    mx, my = np.argwhere(m).mean(0)[::-1]
-    if (mx - cx) * nx + (my - cy) * ny > 0: nx, ny = -nx, -ny
-    peau = ref[m & (ref[..., 3] > 200)][:, :3].astype(int)
-    peau = peau[(peau[:, 0] > 200) & (peau[:, 1] > 140) & (peau[:, 2] > 100)]
-    coul = tuple(int(v) for v in np.median(peau, 0))
-    ext = 70
-    quad = np.array([(x0, y0), (x1, y1), (x1 + nx * ext, y1 + ny * ext), (x0 + nx * ext, y0 + ny * ext)], np.int32)
-    cap = np.zeros((H, W, 4), np.uint8)
-    cv2.fillPoly(cap, [quad], (*coul, 255))
-    cv2.polylines(cap, [quad[[1, 2]], quad[[3, 0]]], False, (20, 14, 20, 255), 10)
-    sous = cap[..., 3] > 0
-    bras[sous & (bras[..., 3] < 128)] = cap[sous & (bras[..., 3] < 128)]
     sauver(nom, bras)
-    corps[m] = 0
-    info[nom] = {'pivot': list(pivot)}
+    # épaule fixe sur le buste : le haut de la manche (près de la couture) reste en place sous le bras qui tourne
+    px, py = PIVOTS[nom]
+    yy0, xx0 = np.mgrid[0:H, 0:W]
+    epaule = m & ((xx0 - px) ** 2 + (yy0 - py) ** 2 < 62 ** 2)
+    corps[m & ~epaule] = 0
+    info[nom] = {'pivot': list(PIVOTS[nom])}
 # le menton de la référence dépasse sous la coupe : on repère son contour noir (première ligne sombre sous la peau),
 # on lisse cette courbe (polynôme) et on retire tout au-dessus + l'épaisseur du trait. La tête fournit son propre menton.
 lumc = corps[..., :3].astype(int).mean(2)
@@ -80,6 +67,11 @@ sauver('corps', corps)
 
 # ---------------------------------------------------------------- tête + casquette + mèches
 tete = garde_plus_grand(lire('tete.png'))
+COU_BAS = 860
+yy1 = np.arange(H)[:, None]
+cx_cou = 1440
+bout = (yy1 > COU_BAS) | ((yy1 > COU_BAS - 40) & ((np.arange(W)[None, :] - cx_cou) ** 2 / 90.0 ** 2 + (yy1 - (COU_BAS - 40)) ** 2 / 40.0 ** 2 > 1) & (yy1 > COU_BAS - 40))
+tete[bout] = 0
 sauver('tete', tete)
 r, g, b, al = [ref[..., i].astype(int) for i in range(4)]
 zone_cas = poly(ref.shape, [(1080, 60), (1600, 60), (1600, 150), (1420, 230), (1300, 330), (1180, 420), (1080, 420)])

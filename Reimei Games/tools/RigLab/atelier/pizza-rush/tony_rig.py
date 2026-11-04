@@ -17,7 +17,7 @@ os_ = lambda nom, piv, parent: {'name': nom, 'pivot': piv, 'parent': parent}
 parts = [P['socle'], os_('bassin', cv(1400, 1010), 'socle'),
          {**P['haut'], 'pivot': cv(1400, 860), 'parent': 'bassin'},
          os_('cou', COU, 'haut')]
-for b, piv in [('bras-d', cv(1212, 838)), ('bras-g', cv(1572, 832))]:
+for b, piv in [('bras-d', cv(1282, 792)), ('bras-g', cv(1542, 798))]:
     parts.append({**P[b], 'pivot': piv, 'parent': 'haut'})
 parts.append({**P['tete'], 'pivot': COU, 'parent': 'cou'})
 for v in VARIANTES: parts.append({**P[v], 'pivot': COU, 'parent': 'cou', 'alpha': 0})
@@ -69,8 +69,8 @@ A = 'gain'; anim(A, 1370, 0)
 k(A, 'socle', 0, sx=1, sy=1); k(A, 'socle', 110, S, sx=1.05, sy=0.93); k(A, 'socle', 300, IMP, sx=0.97, sy=1.06)
 k(A, 'socle', 520, S, sx=1, sy=1); k(A, 'socle', 1370, sx=1, sy=1)
 k(A, 'haut', 0, y=0); k(A, 'haut', 110, S, y=6); k(A, 'haut', 300, IN, y=-14); k(A, 'haut', 1100, S, y=-6); k(A, 'haut', 1370, S, y=0)
-k(A, 'bras-d', 0, rot=0); k(A, 'bras-d', 140, S, rot=r(-6)); k(A, 'bras-d', 360, IN, rot=r(48))
-k(A, 'bras-d', 560, S, rot=r(40)); k(A, 'bras-d', 760, S, rot=r(50)); k(A, 'bras-d', 960, S, rot=r(42)); k(A, 'bras-d', 1370, S, rot=0)
+k(A, 'bras-d', 0, rot=0); k(A, 'bras-d', 140, S, rot=r(-6)); k(A, 'bras-d', 360, IN, rot=r(34))
+k(A, 'bras-d', 560, S, rot=r(28)); k(A, 'bras-d', 760, S, rot=r(35)); k(A, 'bras-d', 960, S, rot=r(30)); k(A, 'bras-d', 1370, S, rot=0)
 k(A, 'bras-g', 0, rot=0); k(A, 'bras-g', 180, S, rot=r(4)); k(A, 'bras-g', 400, IN, rot=r(-12)); k(A, 'bras-g', 1370, S, rot=0)
 k(A, 'cou', 0, rot=0); k(A, 'cou', 330, IN, rot=r(-5)); k(A, 'cou', 1000, S, rot=r(-3)); k(A, 'cou', 1370, S, rot=0)
 visage(A, 'tete-rire', 300, 1180)
@@ -84,8 +84,8 @@ k(A, 'socle', 760, OUT, y=0, sx=1, sy=1); k(A, 'socle', 820, IMP, sx=1.08, sy=0.
 k(A, 'socle', 1120, S, sx=1, sy=1); k(A, 'socle', 1700, sx=1, sy=1)
 for b, sgn in [('bras-d', 1), ('bras-g', -1)]:
     d = 40 if b == 'bras-g' else 0
-    k(A, b, 0, rot=0); k(A, b, 120 + d, S, rot=r(-8 * sgn)); k(A, b, 320 + d, IN, rot=r(58 * sgn))
-    k(A, b, 620 + d, S, rot=r(50 * sgn)); k(A, b, 860 + d, IMP, rot=r(60 * sgn)); k(A, b, 1200 + d, S, rot=r(52 * sgn)); k(A, b, 1700, S, rot=0)
+    k(A, b, 0, rot=0); k(A, b, 120 + d, S, rot=r(-8 * sgn)); k(A, b, 320 + d, IN, rot=r(40 * sgn))
+    k(A, b, 620 + d, S, rot=r(34 * sgn)); k(A, b, 860 + d, IMP, rot=r(42 * sgn)); k(A, b, 1200 + d, S, rot=r(36 * sgn)); k(A, b, 1700, S, rot=0)
 k(A, 'casquette', 0, y=0, rot=0); k(A, 'casquette', 300, y=0, rot=0); k(A, 'casquette', 470, GL, y=-26, rot=r(-6))
 k(A, 'casquette', 640, OUT, y=0, rot=r(2)); k(A, 'casquette', 720, IMP, y=4, rot=0); k(A, 'casquette', 880, S, y=0)
 k(A, 'cou', 0, rot=0); k(A, 'cou', 280, IN, rot=r(-6)); k(A, 'cou', 800, IMP, rot=r(3)); k(A, 'cou', 1000, S, rot=0)
@@ -118,8 +118,8 @@ visage(A, 'tete-triste', 150, 1380)
 A = 'bonus'; anim(A, 1500, 0)
 k(A, 'socle', 0, y=0, sx=1, sy=1); k(A, 'socle', 110, S, sx=1.06, sy=0.92); k(A, 'socle', 280, IN, y=-40, sx=0.97, sy=1.05)
 k(A, 'socle', 540, OUT, y=8, sx=1.06, sy=0.92); k(A, 'socle', 640, IMP, y=-5, sx=0.98, sy=1.03); k(A, 'socle', 780, S, y=0, sx=1, sy=1); k(A, 'socle', 1500, sx=1, sy=1)
-k(A, 'bras-g', 0, rot=0); k(A, 'bras-g', 150, S, rot=r(6)); k(A, 'bras-g', 380, IN, rot=r(-55))
-for i, t in enumerate(range(560, 1160, 150)): k(A, 'bras-g', t, S, rot=r(-48 if i % 2 == 0 else -58))
+k(A, 'bras-g', 0, rot=0); k(A, 'bras-g', 150, S, rot=r(6)); k(A, 'bras-g', 380, IN, rot=r(-40))
+for i, t in enumerate(range(560, 1160, 150)): k(A, 'bras-g', t, S, rot=r(-34 if i % 2 == 0 else -42))
 k(A, 'bras-g', 1500, S, rot=0)
 k(A, 'bras-d', 0, rot=0); k(A, 'bras-d', 400, S, rot=r(10)); k(A, 'bras-d', 1500, S, rot=0)
 k(A, 'cou', 0, rot=0); k(A, 'cou', 320, IN, rot=r(6)); k(A, 'cou', 1200, S, rot=r(4)); k(A, 'cou', 1500, S, rot=0)
