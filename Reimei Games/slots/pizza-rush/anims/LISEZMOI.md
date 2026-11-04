@@ -22,3 +22,18 @@ Clips communs : `idle` (boucle), `land` 730 ms (impact à t=0), `win` 1370 ms (�
 Scatter en plus : `suspense` (boucle 2 s, pendant l'attente du dernier rouleau) → `declenche` 1200 ms (événement
 `declenche` à 330 ms) → `danse` (boucle 2 s, pendant la présentation du bonus).
 Rotation des clés : radians (Pixi). Nombres décimaux : toujours avec le zéro (`0.92`, pas `.92`).
+
+## Tony (personnage, à côté des rouleaux) : `anims/tony/`
+Calques découpés dans la référence Gemini (`art/tony/`) par `atelier/pizza-rush/tony_detoure.py` + `tony_calques.py`,
+rig et animations par `tony_rig.py`. Os : socle (pieds) → bassin → haut (buste) → cou → tête ; bras aux épaules
+(sous les manches). 5 visages permutés par clés `visible` : yeux fermés, rire, choc, triste, clin d'œil.
+
+| clip | durée | quand | événements |
+|---|---|---|---|
+| `idle` | 2400 ms, boucle | toujours | — (clignement à 1640 ms) |
+| `gain` | 1370 ms | petit gain | `gain` 300 |
+| `grosgain` | 1700 ms | gros gain / big win | `gain` 0, `impact` 760 (atterrissage) |
+| `presque` | 1500 ms | 2 scatters, raté de peu | `choc` 80 |
+| `perte` | 1500 ms | série de pertes (pas à chaque spin) | — |
+| `bonus` | 1500 ms | déclenchement des free spins | `bonus` 340 |
+Revenir à `idle` après chaque clip (mix 160 ms).
