@@ -40,10 +40,10 @@ export class Reels {
     this.cw = w / REELS;
     this.ch = h / ROWS;
     this.scale = (this.ch * 0.98) / 538;
-    // fond de la fenêtre : bleu nuit comme le tableau d'origine, colonnes séparées par des baguettes de bois
-    this.back.roundRect(-6, -6, w + 12, h + 12, 26).fill({ color: 0x14213d, alpha: 0.94 });
-    for (let r = 1; r < REELS; r++) this.back.rect(r * this.cw - 2.5, 0, 5, h).fill({ color: 0x6b4426, alpha: 0.9 });
-    for (let y = 1; y < ROWS; y++) this.back.rect(0, y * this.ch - 1, w, 2).fill({ color: 0x23335a, alpha: 0.8 });
+    // fond de la fenêtre : bordeaux sombre (laque rouge et or du cadre), colonnes séparées par des filets dorés
+    this.back.roundRect(-6, -6, w + 12, h + 12, 26).fill({ color: 0x2a1016, alpha: 0.93 });
+    for (let r = 1; r < REELS; r++) this.back.rect(r * this.cw - 2, 0, 4, h).fill({ color: 0xd9a441, alpha: 0.45 });
+    for (let y = 1; y < ROWS; y++) this.back.rect(0, y * this.ch - 1, w, 2).fill({ color: 0x4a1d24, alpha: 0.7 });
     this.mask.rect(0, 0, w, h).fill(0xffffff);
     this.spinLayer.mask = this.mask;
     this.root.addChild(this.back, this.glow, this.spinLayer, this.mask, this.symLayer);

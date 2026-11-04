@@ -28,54 +28,75 @@ def rogner(a, marge=4):
     ys, xs = np.nonzero(a[..., 3] > 8)
     return a[max(ys.min() - marge, 0):ys.max() + marge, max(xs.min() - marge, 0):xs.max() + marge]
 
-# ---- fonds : pizzeria de jour (jeu de base), de nuit (free spins)
-for nom, f in [('fond-jour', 'Italian_pizzeria_interior_slot_b_2b4b56c3.jpg'), ('fond-nuit', 'Busy_pizzeria_interior_at_night_3793b4bc.jpg')]:
-    im = Image.open(os.path.join(SRC, f)).convert('RGB')
-    im.resize((1920, round(1920 * im.height / im.width)), Image.LANCZOS).save(os.path.join(IMG, nom + '.webp'), quality=86)
+# ---- fond unique (les free spins le teintent en « nuit » dans le code)
+im = Image.open(os.path.join(SRC, 'Italian_pizzeria_interior_backgr_4b6c9118.jpg')).convert('RGB')
+im.resize((1920, round(1920 * im.height / im.width)), Image.LANCZOS).save(os.path.join(IMG, 'fond.webp'), quality=88)
+for vieux in ('fond-jour.webp', 'fond-nuit.webp'):
+    if os.path.exists(os.path.join(IMG, vieux)): os.remove(os.path.join(IMG, vieux))
 
 # ---- logo
 logo = rogner(cle_verte(np.asarray(Image.open(os.path.join(SRC, 'Pizza_Rush_game_logo_eeeb4730.jpg')).convert('RGB'))))
 Image.fromarray(logo).resize((900, round(900 * logo.shape[0] / logo.shape[1])), Image.LANCZOS).save(os.path.join(IMG, 'logo.png'))
 
-# ---- cadre : vert retiré, intérieur rendu transparent, bande neutre retirée au milieu (cases presque carrées)
-cad = cle_verte(np.asarray(Image.open(os.path.join(SRC, 'Slot_machine_reel_frame_79634ed9.jpg')).convert('RGB')))
-rgb = cad[..., :3].astype(int)
-sombre = (rgb.mean(2) < 95) & (rgb[..., 2] >= rgb[..., 0]) & (cad[..., 3] > 0)
-sombre = cv2.morphologyEx(sombre.astype(np.uint8), cv2.MORPH_OPEN, np.ones((9, 9), np.uint8))
-n, lab, st, _ = cv2.connectedComponentsWithStats(sombre)
-grandes = [j for j in range(1, n) if st[j, cv2.CC_STAT_AREA] > 20000]          # les 20 cases de la grille peinte
-pts = np.argwhere(np.isin(lab, grandes))[:, ::-1].astype(np.int32)
-hull = cv2.convexHull(pts)
-inter = np.zeros(cad.shape[:2], np.uint8); cv2.fillPoly(inter, [hull], 1)
-inter = cv2.erode(inter, np.ones((7, 7), np.uint8))
-cad[inter.astype(bool), 3] = 0
-x0, y0, w, h = cv2.boundingRect(hull)
-COUPE = (1310, 1820)                                   # bande de bois neutre (entre les notes et le basilic)
-F = 48                                                  # fondu sur 48 px : pas de couture visible dans le bois
-g = cad[:, :COUPE[0] + F].astype(np.float32); d = cad[:, COUPE[1]:].astype(np.float32)
-t = np.linspace(0, 1, F)[None, :, None]
-mix = g[:, -F:] * (1 - t) + d[:, :F] * t
-cad = np.concatenate([g[:, :-F], mix, d[:, F:]], axis=1).astype(np.uint8)
-retire = COUPE[1] - COUPE[0]
+# ---- cadre (rouge laqué et or) : Gemini a raté le bas → on garde le haut, on prolonge les côtés avec leur moulure
+# exacte et on génère le bas et ses coins arrondis à partir de cette moulure (même rayon que les coins du haut).
+def cle_magenta(a):
+    a = a.astype(np.float32); r, g, b = a[..., 0], a[..., 1], a[..., 2]
+    d = (np.minimum(r, b) - g) / 255.0                      # ~1 sur le magenta pur, ~0 sur le cadre
+    alpha = np.clip((0.62 - d) / 0.30, 0, 1)
+    M = np.array([255, 0, 255], np.float32)
+    rgb = np.where(alpha[..., None] > 0.02, (a - (1 - alpha[..., None]) * M) / np.maximum(alpha[..., None], 0.02), 0)
+    out = np.zeros(a.shape[:2] + (4,), np.uint8)
+    out[..., :3] = np.clip(rgb, 0, 255); out[..., 3] = (alpha * 255).astype(np.uint8)
+    return out
+
+src = np.asarray(Image.open(os.path.join(SRC, 'Slot_machine_frame_design_b0c0cb17.jpg')).convert('RGB'))
+H0, W0 = src.shape[:2]
+GARDE = 900                 # le haut est propre jusqu'ici
+X_IN_G, X_IN_D = 335, 2417  # bords intérieurs de l'ouverture (mesurés ; le cadre va de 147 à 2605, centré sur 1376)
+Y_OUV = 428                 # haut de l'ouverture
+OUV_H = 1600                # hauteur voulue de l'ouverture → cases presque carrées
+EP = 190                    # épaisseur de la moulure des côtés
+R = 150                     # rayon des coins intérieurs (comme en haut)
+y_bas = Y_OUV + OUV_H
+H = y_bas + EP + 14
+MAG = np.array([255, 0, 255], np.uint8)
+cad = np.empty((H, W0, 3), np.uint8); cad[:] = MAG
+cad[:GARDE] = src[:GARDE]
+lignes = src[650:880]
+prof_g = np.median(lignes[:, X_IN_G - EP:X_IN_G], axis=0).astype(np.uint8)[::-1]        # k = 0 au bord intérieur → extérieur
+prof_d = np.median(lignes[:, X_IN_D + 1:X_IN_D + 1 + EP], axis=0).astype(np.uint8)       # idem côté droit
+for y in range(GARDE, y_bas - R):
+    cad[y, X_IN_G - EP:X_IN_G] = prof_g[::-1]
+    cad[y, X_IN_D + 1:X_IN_D + 1 + EP] = prof_d
+# bas droit : moulure tournée (k = distance au bord intérieur bas)
+prof_b = ((prof_g.astype(np.float32) + prof_d.astype(np.float32)) / 2).astype(np.uint8)
+for k in range(EP):
+    cad[y_bas + k, X_IN_G + R:X_IN_D + 1 - R] = prof_b[k]
+# coins arrondis : la moulure « tourne » autour du centre du coin
+for (cx, prof, sens) in ((X_IN_G + R, prof_g, -1), (X_IN_D + 1 - R, prof_d, 1)):
+    cy = y_bas - R
+    ys, xs = np.mgrid[cy:y_bas + EP, cx - (R + EP) if sens < 0 else cx:cx + 1 if sens < 0 else cx + R + EP]
+    dist = np.hypot(xs - cx, ys - cy)
+    k = np.round(dist - R).astype(int)
+    ok = (k >= 0) & (k < EP) & (ys >= cy)
+    cad[ys[ok], xs[ok]] = prof[k[ok]]
+cad = cle_magenta(cad)
 cad = rogner(cad, 2)
-ys, xs = np.nonzero(cad[..., 3] > 8)
-ox = 0; oy = 0
-# recalcule la fenêtre intérieure dans l'image finale
-mask = (cad[..., 3] == 0).astype(np.uint8)
+mask = (cad[..., 3] < 30).astype(np.uint8)
 n, lab, st, _ = cv2.connectedComponentsWithStats(mask)
-# composante la plus grande qui ne touche pas le bord = intérieur
 best = None
 for j in range(1, n):
     x, y, ww, hh, area = st[j]
     if x > 0 and y > 0 and x + ww < cad.shape[1] and y + hh < cad.shape[0]:
         if best is None or area > st[best, 4]: best = j
 fx, fy, fw, fh = [int(v) for v in st[best, :4]]
-ECH = 0.62                                              # taille d'affichage (le cadre fait ~1070 px de large à l'écran)
+ECH = 0.42
 im = Image.fromarray(cad); im = im.resize((round(im.width * ECH), round(im.height * ECH)), Image.LANCZOS)
 im.save(os.path.join(IMG, 'cadre.png'), optimize=True)
-cad = np.asarray(im); fx, fy, fw, fh = [round(v * ECH) for v in (fx, fy, fw, fh)]
-json.dump({'taille': [cad.shape[1], cad.shape[0]], 'fenetre': [fx, fy, fw, fh]}, open(os.path.join(IMG, 'cadre.json'), 'w'))
-print('cadre', cad.shape[1], cad.shape[0], 'fenêtre', fx, fy, fw, fh, 'rapport', round(fw / fh, 3))
+fx, fy, fw, fh = [round(v * ECH) for v in (fx, fy, fw, fh)]
+json.dump({'taille': [im.width, im.height], 'fenetre': [fx, fy, fw, fh]}, open(os.path.join(IMG, 'cadre.json'), 'w'))
+print('cadre', im.width, im.height, 'fenêtre', fx, fy, fw, fh, 'case', round(fw / 5), 'x', round(fh / 4))
 
 # ---- rigs Rig Lab (symboles + Tony)
 dst = os.path.join(PUB, 'anims')

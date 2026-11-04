@@ -1,4 +1,4 @@
-// Scène : fonds (jour / nuit), cadre, logo, rouleaux, Tony, compteur des free spins, bannières.
+// Scène : fond unique (teinté « nuit » pendant les free spins), cadre, logo, rouleaux, Tony, compteur des free spins, bannières.
 // Mise en page responsive : paysage (1920×1080) ou portrait (1080×1920), fond toujours plein écran.
 import { PIXI, makeRig, rigSize, updateRigs } from './rigs';
 import { Reels } from './reels';
@@ -46,8 +46,8 @@ export class Stage {
     await app.init({ resizeTo: window, background: '#120b10', antialias: true, resolution: Math.min(2, window.devicePixelRatio || 1), autoDensity: true });
     parent.appendChild(app.canvas);
     const [day, night, frame, logo, cadre] = await Promise.all([
-      PIXI.Assets.load('img/fond-jour.webp'),
-      PIXI.Assets.load('img/fond-nuit.webp'),
+      PIXI.Assets.load('img/fond.webp'),
+      PIXI.Assets.load('img/fond.webp'),
       PIXI.Assets.load('img/cadre.png'),
       PIXI.Assets.load('img/logo.png'),
       fetch('img/cadre.json').then((r) => r.json()),
@@ -61,6 +61,7 @@ export class Stage {
     this.bgDay = new PIXI.Sprite(day);
     this.bgNight = new PIXI.Sprite(night);
     this.bgNight.alpha = 0;
+    this.bgNight.tint = 0x5a5fa8; // même pizzeria, ambiance de nuit pour les free spins
     for (const b of [this.bgDay, this.bgNight]) b.anchor.set(0.5);
     app.stage.addChild(this.bgDay, this.bgNight, this.world);
 
@@ -84,8 +85,11 @@ export class Stage {
     this.world.addChild(this.tony, this.frame, this.logo, this.fsPanel, this.fx);
 
     app.canvas.addEventListener('pointerdown', () => this.onTap());
-    app.ticker.add((t: any) => {
-      const dt = Math.min(50, t.deltaMS);
+    let last = performance.now();
+    app.ticker.add(() => {
+      const now = performance.now();
+      const dt = Math.min(50, Math.max(0, now - last)); // temps réel écoulé (plafonné si l'onglet a dormi)
+      last = now;
       updateTweens(dt);
       this.reels.update(dt);
       updateRigs(dt);
@@ -174,21 +178,21 @@ export class Stage {
     if (this.portrait) {
       this.logo.scale.set(0.62);
       this.logo.position.set(540, 170);
-      this.frame.scale.set(0.98);
-      this.frame.position.set(540, 830);
+      this.frame.scale.set(1.0);
+      this.frame.position.set(540, 790);
       this.tony.scale.set(0.5);
-      this.tony.position.set(250, 1640);
+      this.tony.position.set(250, 1665);
       this.fsPanel.scale.set(0.95);
       this.fsPanel.position.set(800, 1470);
     } else {
       this.logo.scale.set(0.46);
       this.logo.position.set(300, 135);
-      this.frame.scale.set(0.86);
-      this.frame.position.set(1110, 478);
+      this.frame.scale.set(0.92);
+      this.frame.position.set(1110, 455);
       this.tony.scale.set(0.7);
       this.tony.position.set(320, 915);
       this.fsPanel.scale.set(0.95);
-      this.fsPanel.position.set(1745, 470);
+      this.fsPanel.position.set(1762, 470);
     }
     void hud;
   }
