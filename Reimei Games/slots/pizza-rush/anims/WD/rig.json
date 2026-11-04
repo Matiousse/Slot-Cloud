@@ -1,0 +1,337 @@
+{
+ "size": [
+  640,
+  640
+ ],
+ "mix": 140,
+ "parts": [
+  {
+   "name": "socle",
+   "pivot": [
+    319,
+    543
+   ]
+  },
+  {
+   "name": "haut",
+   "pivot": [
+    319,
+    266
+   ],
+   "parent": "socle"
+  },
+  {
+   "name": "corps",
+   "src": "corps.webp",
+   "pivot": [
+    319,
+    543
+   ],
+   "parent": "socle",
+   "mesh": {
+    "grid": [
+     8,
+     8
+    ],
+    "bones": [
+     {
+      "name": "socle",
+      "radius": 211
+     },
+     {
+      "name": "haut",
+      "radius": 211
+     }
+    ],
+    "falloff": 2.5
+   },
+   "shine": {
+    "angle": 20,
+    "width": 0.16,
+    "strength": 0.85,
+    "color": "#fff4d6"
+   }
+  }
+ ],
+ "emitters": {},
+ "anims": {
+  "idle": {
+   "dur": 2300,
+   "loop": true,
+   "tracks": {
+    "haut": [
+     {
+      "t": 0,
+      "y": 0,
+      "sx": 1,
+      "rot": 0
+     },
+     {
+      "t": 575,
+      "rot": 0.0314,
+      "ease": "inOutSine"
+     },
+     {
+      "t": 1150,
+      "y": -8,
+      "sx": 1.012,
+      "rot": 0,
+      "ease": "inOutSine"
+     },
+     {
+      "t": 1725,
+      "rot": -0.0314,
+      "ease": "inOutSine"
+     },
+     {
+      "t": 2300,
+      "y": 0,
+      "sx": 1,
+      "rot": 0,
+      "ease": "inOutSine"
+     }
+    ]
+   }
+  },
+  "land": {
+   "dur": 730,
+   "loop": false,
+   "tracks": {
+    "socle": [
+     {
+      "y": -44.8,
+      "sx": 0.97,
+      "sy": 1.04,
+      "t": 0
+     },
+     {
+      "y": 0,
+      "sx": 1,
+      "sy": 1,
+      "ease": "inQuad",
+      "t": 110
+     },
+     {
+      "sx": 1.1001,
+      "sy": 0.87,
+      "ease": "outQuad",
+      "t": 170
+     },
+     {
+      "sx": 0.9701,
+      "sy": 1.039,
+      "ease": "inOutQuad",
+      "t": 320
+     },
+     {
+      "sx": 1.0104,
+      "sy": 0.9896,
+      "t": 470
+     },
+     {
+      "sx": 1,
+      "sy": 1,
+      "ease": "outQuad",
+      "t": 730
+     }
+    ],
+    "haut": [
+     {
+      "y": -18.24,
+      "sx": 1,
+      "t": 0
+     },
+     {
+      "y": 0,
+      "sx": 1,
+      "t": 110
+     },
+     {
+      "y": 60.8,
+      "sx": 1.09,
+      "ease": "outQuad",
+      "t": 190
+     },
+     {
+      "y": -19.456,
+      "sx": 0.97,
+      "ease": "inOutQuad",
+      "t": 350
+     },
+     {
+      "y": 4.864,
+      "sx": 1.01,
+      "t": 510
+     },
+     {
+      "y": 0,
+      "sx": 1,
+      "ease": "outQuad",
+      "t": 730
+     }
+    ]
+   },
+   "events": [
+    {
+     "t": 110,
+     "name": "pose"
+    }
+   ]
+  },
+  "win": {
+   "dur": 1370,
+   "loop": false,
+   "tracks": {
+    "socle": [
+     {
+      "sx": 1,
+      "sy": 1,
+      "t": 0
+     },
+     {
+      "sx": 1.05,
+      "sy": 0.94,
+      "ease": "outQuad",
+      "t": 120
+     },
+     {
+      "sx": 1.12,
+      "sy": 1.12,
+      "ease": "outBackBig",
+      "t": 290
+     },
+     {
+      "sx": 1.1,
+      "sy": 1.1,
+      "t": 1100
+     },
+     {
+      "sx": 1,
+      "sy": 1,
+      "ease": "inOutCubic",
+      "t": 1370
+     }
+    ],
+    "haut": [
+     {
+      "y": 0,
+      "t": 0
+     },
+     {
+      "y": 33.44,
+      "ease": "outQuad",
+      "t": 120
+     },
+     {
+      "y": -30.4,
+      "ease": [
+       0.2,
+       1.8,
+       0.4,
+       1
+      ],
+      "t": 300
+     },
+     {
+      "y": -7.295999999999999,
+      "t": 620
+     },
+     {
+      "y": -12.16,
+      "t": 1000
+     },
+     {
+      "y": 0,
+      "ease": "inOutCubic",
+      "t": 1370
+     }
+    ],
+    "corps": [
+     {
+      "shine": 0,
+      "t": 300
+     },
+     {
+      "shine": 1,
+      "ease": [
+       0.12,
+       0.72,
+       0.12,
+       1
+      ],
+      "t": 950
+     }
+    ]
+   },
+   "events": [
+    {
+     "t": 0,
+     "name": "gain"
+    }
+   ]
+  },
+  "remove": {
+   "dur": 330,
+   "loop": false,
+   "tracks": {
+    "socle": [
+     {
+      "sx": 1,
+      "sy": 1,
+      "alpha": 1,
+      "t": 0
+     },
+     {
+      "sx": 1.12,
+      "sy": 1.12,
+      "ease": "outQuad",
+      "t": 90
+     },
+     {
+      "sx": 0.15,
+      "sy": 0.15,
+      "alpha": 0,
+      "ease": "inCubic",
+      "t": 330
+     }
+    ],
+    "corps": [
+     {
+      "flash": 0,
+      "t": 0
+     },
+     {
+      "flash": 0.8,
+      "ease": "outQuad",
+      "t": 90
+     },
+     {
+      "flash": 0.2,
+      "t": 250
+     }
+    ]
+   }
+  },
+  "eclat": {
+   "dur": 600,
+   "loop": false,
+   "tracks": {
+    "corps": [
+     {
+      "flash": 0,
+      "t": 0
+     },
+     {
+      "flash": 0.45,
+      "ease": "outQuad",
+      "t": 120
+     },
+     {
+      "flash": 0,
+      "t": 600
+     }
+    ]
+   }
+  }
+ }
+}

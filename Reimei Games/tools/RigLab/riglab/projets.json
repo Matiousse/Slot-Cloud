@@ -7,6 +7,14 @@
    "rigs": "rigs",
    "sources": "sources",
    "audio": "audio"
+  },
+  {
+   "id": "pizza-rush",
+   "nom": "PIZZA RUSH (Reimei Games)",
+   "dossier": "../../../slots/pizza-rush",
+   "rigs": "anims",
+   "sources": "art",
+   "audio": "audio"
   }
  ]
 }
