@@ -25,7 +25,6 @@ c = P['corps']; c['mesh'] = {'grid': [8, 12], 'falloff': 2.5,
      'bones': [{'name': 'socle', 'radius': 260}, {'name': 'bassin', 'radius': 200}, {'name': 'haut', 'radius': 200}]}
 parts.append(c)
 parts.append({**P['casquette'], 'pivot': cv(1330, 250), 'parent': 'cou'})
-parts.append({**P['meches'], 'pivot': COU, 'parent': 'cou'})
 rig['parts'] = parts
 rig['anims'] = {}
 rig['mix'] = 160

@@ -79,20 +79,50 @@ rouge = zone_cas & (r > 140) & (g < 100) & (b < 110) & (al > 128)
 rouge = cv2.morphologyEx(rouge.astype(np.uint8), cv2.MORPH_OPEN, np.ones((5, 5), np.uint8))
 n, lab, st, _ = cv2.connectedComponentsWithStats(rouge)
 rouge = np.isin(lab, [i for i in range(1, n) if st[i, cv2.CC_STAT_AREA] > 800]).astype(np.uint8)
-plein = cv2.morphologyEx(rouge, cv2.MORPH_CLOSE, np.ones((61, 61), np.uint8))     # bouche les passages des mèches
-cnts, _ = cv2.findContours(plein, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-plein = np.zeros_like(plein); cv2.drawContours(plein, cnts, -1, 1, -1)
-silh = cv2.dilate(plein, np.ones((13, 13), np.uint8)).astype(bool)                 # + le trait noir autour
-cas = np.zeros_like(ref); cas[silh] = ref[silh]; cas[silh, 3] = 255
-# ce qui n'est pas rouge dans la casquette (mèches, reflets sombres) : repeint en rouge par inpainting
-a_peindre = (silh & ~rouge.astype(bool) & cv2.erode(plein, np.ones((15, 15), np.uint8)).astype(bool)).astype(np.uint8)
-rgb = cv2.inpaint(np.ascontiguousarray(cas[..., :3]), a_peindre, 9, cv2.INPAINT_TELEA)
-cas[..., :3] = rgb
-cv2.drawContours(cas, cnts, -1, (20, 14, 20, 255), 9)
+DOME_X1 = 1585
+# casquette COMPLÈTE : sur la référence elle est à moitié cachée par les mèches ; on reconstruit sa forme
+# (enveloppe convexe des parties rouges visibles), on repeint les parties cachées dans son rouge, contour noir fermé.
+pts = np.argwhere(rouge > 0)[:, ::-1].astype(np.int32)
+# le dôme doit couvrir le dessus des cheveux (sinon les mèches passent « à travers ») : on ajoute le haut de la
+# chevelure de la tête, colonne par colonne, sur la largeur de la casquette
+ta = lire('tete.png')[..., 3] > 128
+xr0, xr1 = pts[:, 0].min(), pts[:, 0].max()
+dome = []
+for x in range(xr0, DOME_X1):
+    ys_ = np.nonzero(ta[:, x])[0]
+    if len(ys_): dome.append((x, max(ys_[0] - 10, 0)))
+if dome:
+    xd, yd = dome[-1]
+    dome.append((xd, yd + 95))          # épaisseur de la calotte côté arrière : les mèches de derrière sortent dessous
+    pts = np.vstack([pts, np.array(dome, np.int32)])
+hull = cv2.convexHull(pts)
+silh = np.zeros((H, W), np.uint8); cv2.fillPoly(silh, [hull], 1)
+silh = (cv2.GaussianBlur(silh.astype(np.float32), (0, 0), 14) > 0.5)             # coins arrondis
+# style des symboles : aplat + ombre franche en bas + petit reflet dur en haut, contour noir
+vis = rouge.astype(bool) & silh
+vr = ref[vis][:, :3].astype(float); lum_r = vr.mean(1)
+base = np.median(vr[lum_r >= np.percentile(lum_r, 70)], 0)      # le rouge vif de la casquette d'origine (pas ses ombres)
+ombre = base * np.array([0.68, 0.55, 0.75])
+clair = np.minimum(base * np.array([1.08, 1.6, 1.5]), 255)
+dessous = np.zeros_like(silh); dessous[:-38] = silh[38:]; band_ombre = silh & ~dessous      # 38 px au-dessus du bord bas
+dessus = np.zeros_like(silh); dessus[30:] = silh[:-30]
+xs_c = np.nonzero(silh.any(0))[0]; xmid = (xs_c.min() + xs_c.max()) / 2
+band_clair = cv2.erode(silh.astype(np.uint8), np.ones((25, 25), np.uint8)).astype(bool) & ~dessus
+band_clair &= (np.arange(W)[None, :] < xmid)
+cas = np.zeros_like(ref)
+cas[silh, :3] = base.astype(np.uint8)
+cas[band_ombre, :3] = ombre.astype(np.uint8)
+cas[band_clair, :3] = clair.astype(np.uint8)
+cas[silh, 3] = 255
+cnts, _ = cv2.findContours(silh.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+cv2.drawContours(cas, cnts, -1, (20, 14, 20, 255), 12, cv2.LINE_AA)
+# couture de la calotte (trait rouge foncé), comme une vraie casquette
+x0c, x1c = xs_c.min(), xs_c.max()
+yc = [np.nonzero(silh[:, x])[0] for x in (int(x0c + 0.55 * (x1c - x0c)),)]
+cx = int(x0c + 0.55 * (x1c - x0c)); ytop, ybot = yc[0][0], yc[0][-1]
+cv2.ellipse(cas, (cx + 60, ybot + 10), (110, ybot - ytop), 0, 200, 262, (int(ombre[0]), int(ombre[1]), int(ombre[2]), 255), 7, cv2.LINE_AA)
+a_ = cv2.GaussianBlur((cas[..., 3] > 0).astype(np.float32), (0, 0), 0.8); cas[..., 3] = (np.clip(a_ * 1.3, 0, 1) * 255).astype(np.uint8)
 sauver('casquette', cas)
-meches = np.zeros_like(ref); mm = a_peindre.astype(bool) & (ref[..., 3] > 128)
-meches[mm] = ref[mm]
-sauver('meches', meches)
 
 # ---------------------------------------------------------------- expressions recalées sur la tête
 gris = lambda a: cv2.cvtColor(np.ascontiguousarray(a[..., :3]), cv2.COLOR_RGB2GRAY).astype(np.float32) * (a[..., 3:4][..., 0] / 255.0)
@@ -129,7 +159,7 @@ json.dump(info, open(os.path.join(OUT, 'calques.json'), 'w'), indent=1)
 # ---------------------------------------------------------------- contrôle : remontage + superpositions
 fond = np.zeros((H, W, 4), np.uint8); fond[...] = (40, 30, 60, 255)
 img = Image.fromarray(fond)
-for n in ['bras-d', 'bras-g', 'tete', 'corps', 'casquette', 'meches']:
+for n in ['bras-d', 'bras-g', 'tete', 'corps', 'casquette']:
     img.alpha_composite(Image.open(os.path.join(OUT, n + '.png')))
 box = (820, 40, 2000, 1520)
 pl = Image.new('RGB', (1180 * 4 // 2, 1480 // 2), (0, 0, 0))
