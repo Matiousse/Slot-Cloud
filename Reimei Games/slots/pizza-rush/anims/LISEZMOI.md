@@ -25,8 +25,8 @@ Rotation des clés : radians (Pixi). Nombres décimaux : toujours avec le zéro 
 
 ## Tony (personnage, à côté des rouleaux) : `anims/tony/`
 Tout se refait avec `sh atelier/pizza-rush/tony_tout.sh` (depuis RigLab) : détourage, calques découpés dans la référence,
-visages, rig, animations. Os : socle (pieds) → bassin → haut (buste) → cou → tête ; bras aux épaules
-(sous les manches). Expressions : la tête ne change JAMAIS ; seuls les traits (yeux, sourcils, bouche) sont posés dessus (`visage-*`, calés sur le nez,
+visages, rig, animations. Os : socle (pieds) → bassin → haut (buste) → cou → tête. Les bras font partie du corps et ne sont JAMAIS animés
+(demande : aucune coupe à l'épaule) ; le corps se plie en maillage avec le buste. Expressions : la tête ne change JAMAIS ; seuls les traits (yeux, sourcils, bouche) sont posés dessus (`visage-*`, calés sur le nez,
 peau repeinte sous les traits neutres) et permutés d'une image à l'autre, avec un petit écrasement de la tête.
 Visages : yeux fermés (clignement), rire, choc, triste, clin d'œil.
 
@@ -34,8 +34,8 @@ Visages : yeux fermés (clignement), rire, choc, triste, clin d'œil.
 |---|---|---|---|
 | `idle` | 2400 ms, boucle | toujours | — (clignement à 1640 ms) |
 | `gain` | 1370 ms | petit gain | `gain` 300 |
-| `grosgain` | 1700 ms | gros gain / big win (saut, bras immobiles) | `gain` 0, `impact` 760 (atterrissage) |
+| `grosgain` | 1700 ms | gros gain / big win (saut) | `gain` 0, `impact` 760 (atterrissage) |
 | `presque` | 1500 ms | 2 scatters, raté de peu | `choc` 80 |
 | `perte` | 1500 ms | série de pertes (pas à chaque spin) | — |
-| `bonus` | 1500 ms | déclenchement des free spins (petit saut + clin d'œil, bras immobiles) | `bonus` 340 |
+| `bonus` | 1500 ms | déclenchement des free spins (petit saut + clin d'œil) | `bonus` 340 |
 Revenir à `idle` après chaque clip (mix 160 ms).

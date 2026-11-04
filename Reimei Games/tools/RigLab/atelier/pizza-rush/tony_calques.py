@@ -44,7 +44,7 @@ for nom, pts in BRAS.items():
     px, py = PIVOTS[nom]
     yy0, xx0 = np.mgrid[0:H, 0:W]
     epaule = m & ((xx0 - px) ** 2 + (yy0 - py) ** 2 < 62 ** 2)
-    corps[m & ~epaule] = 0
+    # bras laissés DANS le corps (ils ne bougent jamais : aucune coupe à l'épaule)
     info[nom] = {'pivot': list(PIVOTS[nom])}
 # le menton de la référence dépasse sous la coupe : on repère son contour noir (première ligne sombre sous la peau),
 # on lisse cette courbe (polynôme) et on retire tout au-dessus + l'épaisseur du trait. La tête fournit son propre menton.
@@ -129,7 +129,7 @@ json.dump(info, open(os.path.join(OUT, 'calques.json'), 'w'), indent=1)
 # ---------------------------------------------------------------- contrôle : remontage + superpositions
 fond = np.zeros((H, W, 4), np.uint8); fond[...] = (40, 30, 60, 255)
 img = Image.fromarray(fond)
-for n in ['bras-d', 'bras-g', 'tete', 'corps', 'casquette', 'meches']:
+for n in ['tete', 'corps', 'casquette', 'meches']:
     img.alpha_composite(Image.open(os.path.join(OUT, n + '.png')))
 box = (820, 40, 2000, 1520)
 pl = Image.new('RGB', (1180 * 4 // 2, 1480 // 2), (0, 0, 0))
