@@ -34,8 +34,8 @@ Visages : yeux fermés (clignement), rire, choc, triste, clin d'œil.
 |---|---|---|---|
 | `idle` | 2400 ms, boucle | toujours | — (clignement à 1640 ms) |
 | `gain` | 1370 ms | petit gain | `gain` 300 |
-| `grosgain` | 1700 ms | gros gain / big win | `gain` 0, `impact` 760 (atterrissage) |
+| `grosgain` | 1700 ms | gros gain / big win (saut, bras immobiles) | `gain` 0, `impact` 760 (atterrissage) |
 | `presque` | 1500 ms | 2 scatters, raté de peu | `choc` 80 |
 | `perte` | 1500 ms | série de pertes (pas à chaque spin) | — |
-| `bonus` | 1500 ms | déclenchement des free spins | `bonus` 340 |
+| `bonus` | 1500 ms | déclenchement des free spins (petit saut + clin d'œil, bras immobiles) | `bonus` 340 |
 Revenir à `idle` après chaque clip (mix 160 ms).

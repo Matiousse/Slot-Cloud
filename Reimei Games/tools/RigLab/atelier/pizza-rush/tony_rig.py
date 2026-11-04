@@ -78,14 +78,15 @@ L.append(f"evenement {A} 300 name=gain")
 
 # ---------------- grosgain : saut bras en l'air, la casquette décolle et retombe
 A = 'grosgain'; anim(A, 1700, 0)
-k(A, 'socle', 0, y=0, sx=1, sy=1); k(A, 'socle', 120, S, sx=1.08, sy=0.88)
+k(A, 'socle', 0, y=0, sx=1, sy=1); k(A, 'socle', 120, S, y=14, sx=1.08, sy=0.88)
 k(A, 'socle', 260, '[0.3,1.5,0.5,1]', y=-90, sx=0.94, sy=1.1); k(A, 'socle', 520, GL, y=-120, sx=1, sy=1)
 k(A, 'socle', 760, OUT, y=0, sx=1, sy=1); k(A, 'socle', 820, IMP, sx=1.08, sy=0.9); k(A, 'socle', 980, S, sx=0.98, sy=1.03)
 k(A, 'socle', 1120, S, sx=1, sy=1); k(A, 'socle', 1700, sx=1, sy=1)
-for b, sgn in [('bras-d', 1), ('bras-g', -1)]:
-    d = 40 if b == 'bras-g' else 0
-    k(A, b, 0, rot=0); k(A, b, 120 + d, S, rot=r(-8 * sgn)); k(A, b, 320 + d, IN, rot=r(40 * sgn))
-    k(A, b, 620 + d, S, rot=r(34 * sgn)); k(A, b, 860 + d, IMP, rot=r(42 * sgn)); k(A, b, 1200 + d, S, rot=r(36 * sgn)); k(A, b, 1700, S, rot=0)
+# bras immobiles pendant le saut (demande : ils ne bougent pas quand il saute)
+# fin de gain : il rebondit de joie sur place (pas de temps mort)
+for t, y, ease in [(0, 0, None), (1150, 0, None), (1300, -7, S), (1450, 0, S), (1580, -3, S), (1700, 0, S)]:
+    k(A, 'haut', t, ease, y=y)
+k(A, 'cou', 1200, S, rot=r(-3)); k(A, 'cou', 1450, S, rot=r(2)); k(A, 'cou', 1700, S, rot=0)
 k(A, 'casquette', 0, y=0, rot=0); k(A, 'casquette', 300, y=0, rot=0); k(A, 'casquette', 470, GL, y=-26, rot=r(-6))
 k(A, 'casquette', 640, OUT, y=0, rot=r(2)); k(A, 'casquette', 720, IMP, y=4, rot=0); k(A, 'casquette', 880, S, y=0)
 k(A, 'cou', 0, rot=0); k(A, 'cou', 280, IN, rot=r(-6)); k(A, 'cou', 800, IMP, rot=r(3)); k(A, 'cou', 1000, S, rot=0)
@@ -116,12 +117,9 @@ visage(A, 'tete-triste', 150, 1380)
 
 # ---------------- bonus : clin d'œil + bras levé, petit saut
 A = 'bonus'; anim(A, 1500, 0)
-k(A, 'socle', 0, y=0, sx=1, sy=1); k(A, 'socle', 110, S, sx=1.06, sy=0.92); k(A, 'socle', 280, IN, y=-40, sx=0.97, sy=1.05)
+k(A, 'socle', 0, y=0, sx=1, sy=1); k(A, 'socle', 110, S, y=6, sx=1.06, sy=0.92); k(A, 'socle', 280, IN, y=-40, sx=0.97, sy=1.05)
 k(A, 'socle', 540, OUT, y=8, sx=1.06, sy=0.92); k(A, 'socle', 640, IMP, y=-5, sx=0.98, sy=1.03); k(A, 'socle', 780, S, y=0, sx=1, sy=1); k(A, 'socle', 1500, sx=1, sy=1)
-k(A, 'bras-g', 0, rot=0); k(A, 'bras-g', 150, S, rot=r(6)); k(A, 'bras-g', 380, IN, rot=r(-40))
-for i, t in enumerate(range(560, 1160, 150)): k(A, 'bras-g', t, S, rot=r(-34 if i % 2 == 0 else -42))
-k(A, 'bras-g', 1500, S, rot=0)
-k(A, 'bras-d', 0, rot=0); k(A, 'bras-d', 400, S, rot=r(10)); k(A, 'bras-d', 1500, S, rot=0)
+# bras immobiles pendant le saut
 k(A, 'cou', 0, rot=0); k(A, 'cou', 320, IN, rot=r(6)); k(A, 'cou', 1200, S, rot=r(4)); k(A, 'cou', 1500, S, rot=0)
 visage(A, 'tete-clin', 340, 1250)
 L.append(f"evenement {A} 340 name=bonus")
