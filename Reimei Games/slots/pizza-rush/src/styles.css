@@ -1,0 +1,132 @@
+
+:root {
+  --wood: #6b4426; --wood2: #8a5a33; --ink: #1b0f14; --red: #e8342a; --red2: #b81d17;
+  --gold: #ffc83a; --cream: #fff3d6; --u: min(1vw, 1.78vh);
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; background: #120b10; overflow: hidden; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+#stage, #stage canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+body { font-family: 'Lilita One', system-ui, sans-serif; color: var(--cream); }
+
+/* ---------------------------------------------------------------- barre */
+#hud { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
+.bar {
+  position: absolute; left: 0; right: 0; bottom: 0; height: calc(var(--u) * 8.2);
+  display: flex; align-items: center; justify-content: space-between; gap: calc(var(--u) * 1.4);
+  padding: 0 calc(var(--u) * 2) calc(env(safe-area-inset-bottom) * 0.6);
+  background: linear-gradient(#2a1810ee, #160c08f5); border-top: calc(var(--u) * 0.35) solid var(--wood2);
+  box-shadow: 0 -6px 24px #0008; pointer-events: auto;
+}
+.grp { display: flex; align-items: center; gap: calc(var(--u) * 1.1); }
+.stats { flex: 1; justify-content: center; gap: calc(var(--u) * 3.2); }
+.stat { display: flex; flex-direction: column; align-items: center; min-width: calc(var(--u) * 11); }
+.stat span { font-size: calc(var(--u) * 1.15); letter-spacing: .12em; color: #e7b98a; }
+.stat b { font-family: 'Luckiest Guy'; font-weight: 400; font-size: calc(var(--u) * 2.3); color: #fff; text-shadow: 0 2px 0 var(--ink); white-space: nowrap; }
+.stat.win b { color: var(--gold); font-size: calc(var(--u) * 2.8); min-height: 1em; }
+.betctl { display: flex; align-items: center; gap: calc(var(--u) * .8); }
+.betctl button { width: calc(var(--u) * 3.1); height: calc(var(--u) * 3.1); border-radius: 50%; }
+button {
+  font-family: 'Luckiest Guy'; font-size: calc(var(--u) * 1.6); color: #fff; cursor: pointer;
+  border: calc(var(--u) * .25) solid var(--ink); background: linear-gradient(var(--wood2), var(--wood));
+  box-shadow: 0 calc(var(--u) * .35) 0 var(--ink); border-radius: calc(var(--u) * 1.2); padding: 0;
+  transition: transform .08s, filter .15s;
+}
+button:active { transform: translateY(calc(var(--u) * .25)); box-shadow: 0 calc(var(--u) * .1) 0 var(--ink); }
+.ic { width: calc(var(--u) * 4.4); height: calc(var(--u) * 4.4); border-radius: 50%; font-size: calc(var(--u) * 2); }
+.ic.small { width: calc(var(--u) * 4); height: calc(var(--u) * 4); font-size: calc(var(--u) * 1.4); }
+.ic.on, .pill.on { background: linear-gradient(#ffd95e, #f0a81c); color: var(--ink); }
+.ic.off { opacity: .5; }
+.pill { height: calc(var(--u) * 4.6); padding: 0 calc(var(--u) * 1.6); border-radius: calc(var(--u) * 2.3); display: flex; align-items: center; gap: calc(var(--u) * .8); }
+.pill small { display: block; font-family: 'Lilita One'; font-size: calc(var(--u) * .95); opacity: .9; }
+.pill.ante i { width: calc(var(--u) * 2.6); height: calc(var(--u) * 1.5); border-radius: 99px; background: #0006; position: relative; }
+.pill.ante i::after { content: ''; position: absolute; top: 12%; left: 8%; width: 40%; height: 76%; border-radius: 50%; background: #fff; transition: left .15s; }
+.pill.ante.on i::after { left: 52%; }
+.pill.buy { background: linear-gradient(#ff5a45, var(--red2)); }
+.pill.buy.disabled, #hud.busy .pill.buy, #hud.busy .pill.ante, #hud.busy .betctl button { filter: grayscale(.9) brightness(.7); pointer-events: none; }
+.spin {
+  width: calc(var(--u) * 10.5); height: calc(var(--u) * 10.5); border-radius: 50%; margin-top: calc(var(--u) * -4.5);
+  background: radial-gradient(circle at 50% 35%, #ff6a4d, var(--red) 55%, var(--red2)); border-width: calc(var(--u) * .45);
+  box-shadow: 0 calc(var(--u) * .5) 0 var(--ink), 0 0 calc(var(--u) * 2.5) #ff5a2a88; font-size: calc(var(--u) * 5.2);
+}
+.spin span { display: inline-block; transition: transform .3s; }
+.spin.spinning span { animation: tourne .6s linear infinite; }
+#hud.busy .spin { filter: brightness(.85); }
+#hud.fs .spin { background: radial-gradient(circle at 50% 35%, #ffe07a, var(--gold) 55%, #d68a10); color: var(--ink); }
+@keyframes tourne { to { transform: rotate(360deg); } }
+
+/* ---------------------------------------------------------------- modales */
+.modal { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; background: #000a; pointer-events: auto; z-index: 10; }
+.modal.open { display: flex; }
+.card {
+  position: relative; width: min(92vw, 860px); max-height: 86vh; overflow: auto; padding: 28px 30px;
+  background: linear-gradient(#3a2416, #22130b); border: 6px solid var(--wood2); border-radius: 28px; box-shadow: 0 20px 60px #000c;
+}
+.card.small { width: min(90vw, 460px); text-align: center; }
+.card h2 { font-family: 'Luckiest Guy'; font-weight: 400; font-size: 40px; margin: 0 0 14px; text-align: center; color: var(--gold); text-shadow: 0 3px 0 var(--ink); }
+.card h3 { font-family: 'Luckiest Guy'; font-weight: 400; color: #ffd27a; margin: 20px 0 6px; display: flex; align-items: center; gap: 8px; }
+.card h3 img { width: 44px; }
+.card p { line-height: 1.4; margin: 6px 0; color: #f6e6cc; }
+.card .row { display: flex; gap: 14px; justify-content: center; margin-top: 18px; }
+.card .row .pill { font-size: 20px; height: 54px; padding: 0 26px; }
+.close { position: absolute; top: 12px; right: 12px; width: 44px; height: 44px; border-radius: 50%; font-size: 20px; }
+.offers { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; }
+.offer { width: 300px; padding: 20px 16px; border-radius: 22px; text-align: center; background: linear-gradient(#ff6a4d, var(--red2)); font-family: 'Lilita One'; }
+.offer h3 { justify-content: center; font-size: 30px; color: #fff; margin: 0 0 8px; }
+.offer p { color: #fff; margin: 4px 0; font-size: 18px; }
+.offer .price { margin-top: 12px; font-family: 'Luckiest Guy'; font-size: 26px; background: #0004; border-radius: 14px; padding: 8px; }
+.rules .lead { text-align: center; }
+table.pay { width: 100%; border-collapse: collapse; }
+table.pay td, table.pay th { padding: 4px 8px; text-align: center; font-family: 'Luckiest Guy'; font-weight: 400; }
+table.pay td:nth-child(2) { text-align: left; font-family: 'Lilita One'; }
+table.pay img { width: 54px; display: block; }
+table.pay tr:nth-child(even) { background: #ffffff0d; }
+
+.toast {
+  position: absolute; left: 50%; top: 14%; transform: translate(-50%, -20px); opacity: 0; transition: .25s; pointer-events: none;
+  background: #1b0f14e6; border: 3px solid var(--gold); border-radius: 18px; padding: 12px 22px; font-size: calc(var(--u) * 1.8); z-index: 20;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---------------------------------------------------------------- écran d'accueil */
+#splash { position: fixed; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center; background: radial-gradient(#3a1e12, #120b10 70%); transition: opacity .5s; }
+#splash.out { opacity: 0; pointer-events: none; }
+#splash .inner { display: flex; flex-direction: column; align-items: center; gap: 2.4vh; width: min(94vw, 1000px); text-align: center; }
+#splash .logo { width: min(78vw, 640px); filter: drop-shadow(0 10px 18px #000a); }
+#splash .cards { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+#splash .sc { width: 220px; background: #00000059; border: 3px solid var(--wood2); border-radius: 20px; padding: 12px; }
+#splash .sc img { width: 92px; }
+#splash .sc h3 { font-family: 'Luckiest Guy'; font-weight: 400; color: var(--gold); margin: 6px 0 4px; font-size: 22px; }
+#splash .sc p { margin: 0; font-size: 15px; color: #f2dcc0; }
+#splash .max { color: #e7b98a; letter-spacing: .08em; }
+#splash .cta { font-size: 34px; padding: 14px 64px; border-radius: 40px; background: linear-gradient(#ff6a4d, var(--red2)); }
+#splash .cta:disabled { filter: grayscale(.8); }
+#splash .bar-load { width: min(60vw, 420px); height: 12px; border-radius: 99px; background: #0007; overflow: hidden; border: 2px solid var(--ink); }
+#splash .bar-load i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--gold), #ff8a1f); transition: width .2s; }
+
+/* ---------------------------------------------------------------- portrait (mobile) */
+@media (orientation: portrait) {
+  :root { --u: min(1.9vw, 1.05vh); }
+  .bar { height: calc(var(--u) * 17); flex-wrap: wrap; align-content: center; row-gap: calc(var(--u) * 1.4); padding-bottom: calc(env(safe-area-inset-bottom) + var(--u) * 1.2); }
+  .stats { order: -1; flex-basis: 100%; gap: calc(var(--u) * 2); }
+  .grp.left { order: 1; }
+  .grp.right { order: 2; flex: 1; justify-content: flex-end; }
+  .spin { margin-top: 0; width: calc(var(--u) * 9.5); height: calc(var(--u) * 9.5); }
+  .pill small { display: none; }
+}
+@media (orientation: portrait) {
+  #splash .inner { gap: 2vh; }
+  #splash .logo { width: 74vw; }
+  #splash .cards { flex-wrap: nowrap; gap: 2vw; }
+  #splash .sc { width: 30vw; padding: 2vw; border-radius: 14px; }
+  #splash .sc img { width: 13vw; }
+  #splash .sc h3 { font-size: 3.6vw; }
+  #splash .sc p { font-size: 2.7vw; }
+  #splash .max { font-size: 3.2vw; }
+  #splash .cta { font-size: 6vw; padding: 2vh 12vw; }
+}
+@media (orientation: portrait) {
+  .stat span { font-size: calc(var(--u) * 1.5); }
+  .stat b { font-size: calc(var(--u) * 2.7); }
+  .stat.win b { font-size: calc(var(--u) * 3.1); }
+}
+body.no-turbo [data-a="turbo"], body.no-auto [data-a="auto"], body.no-buy [data-a="buy"] { display: none; }

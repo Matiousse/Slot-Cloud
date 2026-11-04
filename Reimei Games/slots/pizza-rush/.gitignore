@@ -1,0 +1,4 @@
+node_modules
+math/.cache/
+dist/
+math/*.log

@@ -1,0 +1,41 @@
+{
+  "game": "pizza-rush",
+  "version": "1.0.0",
+  "targetRtp": 0.967,
+  "maxWinX": 10000,
+  "bonusOdds": {
+    "base": 217.41247876781037,
+    "ante": 43.482495724221806
+  },
+  "tierSplit": {
+    "1": 0.9569076559170006,
+    "2": 0.04234291201199092,
+    "3": 0.0007494320710086889
+  },
+  "modes": {
+    "base": {
+      "cost": 1,
+      "rtp": 0.967,
+      "hitRate": 0.604977,
+      "maxWinOdds": 4253158
+    },
+    "ante": {
+      "cost": 3,
+      "rtp": 0.967,
+      "hitRate": 0.612275,
+      "maxWinOdds": 850632
+    },
+    "bonus": {
+      "cost": 100,
+      "rtp": 0.967,
+      "hitRate": 0.999896,
+      "maxWinOdds": 216439
+    },
+    "super": {
+      "cost": 300,
+      "rtp": 0.967,
+      "hitRate": 0.999989,
+      "maxWinOdds": 296502
+    }
+  }
+}
