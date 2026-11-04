@@ -179,8 +179,8 @@ export class Stage {
     if (this.portrait) {
       this.logo.scale.set(0.6);
       this.logo.position.set(540, 150);
-      this.frame.scale.set(1.0);
-      this.frame.position.set(540, 700);
+      this.frame.scale.set(0.92);
+      this.frame.position.set(540, 712);
       this.tony.scale.set(0.36);
       this.tony.position.set(540, 1420);
       this.fsPanel.scale.set(0.7);
@@ -189,8 +189,8 @@ export class Stage {
       // commandes en panneaux latéraux (DOM) : la scène se tient entre les deux
       this.logo.scale.set(0.4);
       this.logo.position.set(230, 120);
-      this.frame.scale.set(0.92);
-      this.frame.position.set(1000, 450);
+      this.frame.scale.set(0.86);
+      this.frame.position.set(1000, 452);
       this.tony.scale.set(0.44);
       this.tony.position.set(455, 1080);
       this.fsPanel.scale.set(0.72);
