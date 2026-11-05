@@ -17,7 +17,7 @@ import numpy as np, cv2
 from PIL import Image
 
 OUT, HT = sys.argv[1], int(sys.argv[2])
-FPS, PAS_SORTIE, N_ENTREE, N_RETOUR, N_SORTIE = 12, 12, 5, 6, 5
+FPS, PAS_SORTIE, N_ENTREE, N_RETOUR, N_SORTIE = 12, 12, 7, 7, 6
 INTERRUPTIBLES = {'suspense', 'perte'}   # bras le long du corps : une autre réaction peut les couper (sortie vers P chaque seconde)
 # (gain et rush gardent le bras levé ou tendu jusqu'à la fin : une sortie en plein geste laisserait un bras fantôme)
 os.makedirs(OUT, exist_ok=True)
@@ -98,6 +98,50 @@ def gris(a):
     return cv2.cvtColor((c * 255).astype(np.uint8), cv2.COLOR_RGB2GRAY)
 
 
+# Visage (fractions de la vignette, pose P) : les traits ne se MÉLANGENT jamais (deux paires d'yeux superposées = bizarre).
+# Dans cette zone, l'image passe d'un coup de A à B au milieu du mouvement, comme un clignement ; le reste se déforme en douceur.
+VISAGE = (0.385, 0.2375, 0.85, 0.525)
+YEUX = (0.449, 0.27, 0.769, 0.43)
+
+
+def zone(box):
+    x0, y0, x1, y1 = box
+    return slice(round(y0 * H), round(y1 * H)), slice(round(x0 * W), round(x1 * W))
+
+
+FACE = np.zeros((H, W), np.float32)
+FACE[zone(VISAGE)] = 1
+FACE = cv2.GaussianBlur(FACE, (0, 0), 5)[..., None]
+
+
+def yeux(a, b):
+    """écart dans la zone des yeux (yeux mi-clos, regard ailleurs…)"""
+    z = zone(YEUX)
+    return float(np.abs(a[z][..., :3] * a[z][..., 3:] - b[z][..., :3] * b[z][..., 3:]).mean())
+
+
+OUVERT = (slice(round(.22 * H), round(.5 * H)), slice(round(.38 * W), round(.85 * W)))
+
+
+def blanc(a):
+    """surface de blanc des yeux : mesure l'ouverture des yeux, quelle que soit la position de la tête"""
+    f = a[OUVERT]
+    return float(((f[..., :3].min(-1) > 0.88) & (f[..., 3] > 0.5)).sum())
+
+
+B_P = None
+
+
+def yeux_ok(a):
+    """yeux ouverts comme dans la pose P (ni fermés, ni mi-clos, ni écarquillés)"""
+    return 0.82 * B_P <= blanc(a) <= 1.25 * B_P
+
+
+def cout(a):
+    """proximité avec la pose P ; une image aux yeux pas « normaux » n'est jamais un point de raccord"""
+    return ecart(a, P) + (0 if yeux_ok(a) else 10)
+
+
 def morph(A, B, n):
     """n images intermédiaires de A vers B (A et B exclus), avec une courbe douce (accélère puis freine)."""
     ga, gb = gris(A), gris(B)
@@ -113,19 +157,34 @@ def morph(A, B, n):
         wa = cv2.remap(pa, gx + t * fba[..., 0], gy + t * fba[..., 1], cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
         wb = cv2.remap(pb, gx + (1 - t) * fab[..., 0], gy + (1 - t) * fab[..., 1], cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
         m = (1 - t) * wa + t * wb
+        m = m * (1 - FACE) + (wa if t < 0.5 else wb) * FACE     # visage : bascule nette, jamais de mélange
         al = np.clip(m[..., 3:], 0, 1)
         rgb = np.where(al > 1e-3, m[..., :3] / np.maximum(al, 1e-3), 0)
         res.append(np.dstack([np.clip(rgb, 0, 1), al]))
     return res
 
 
+B_P = blanc(P)
 seq = {}                                             # nom de segment → liste d'images
 seq['repos'] = clips[repos]
 sorties = {}
 idle = clips[repos]
-for k in list(range(PAS_SORTIE, len(idle), PAS_SORTIE)) + [len(idle) - 1]:
+
+
+def points_de_sortie(frames, debut=1, fin=None):
+    """une sortie par seconde environ, placée sur la meilleure image de la fenêtre (pose proche de P, yeux ouverts)"""
+    fin = len(frames) - 1 if fin is None else fin
+    out = []
+    for c in range(PAS_SORTIE, fin + 1, PAS_SORTIE):
+        cand = [i for i in range(c - 5, c + 7) if debut <= i < fin]
+        if cand: out.append(min(cand, key=lambda i: cout(frames[i])))
+    return sorted(set(out))
+
+
+for k in points_de_sortie(idle, 1, len(idle)):
     sorties[k] = f'repos>P@{k}'
     seq[sorties[k]] = morph(idle[k], P, N_SORTIE)
+print('sorties du repos :', list(sorties), flush=True)
 
 reactions = {}
 for nom, _, debut, fin_min, naturel, fin_nat in specs[1:]:
@@ -133,9 +192,11 @@ for nom, _, debut, fin_min, naturel, fin_nat in specs[1:]:
     n = len(fr)
     # début : près de P, juste avant l'action (on pénalise ce qui part trop tôt) ; fin : près de P, après l'action
     i_deb = min(range(max(1, round((debut - 1.2) * FPS)), round(debut * FPS) + 1),
-                key=lambda i: ecart(fr[i], P) + 0.004 * (round(debut * FPS) - i))
+                key=lambda i: cout(fr[i]) + 0.004 * (round(debut * FPS) - i))
     f0 = round((fin_nat if fin_nat is not None else fin_min) * FPS)
-    i_fin = min(range(f0, n), key=lambda i: ecart(fr[i], P) + 0.003 * (i - f0))
+    i_fin = min(range(f0, n), key=lambda i: cout(fr[i]) + 0.003 * (i - f0))
+    if not yeux_ok(fr[i_fin]):     # aucun raccord yeux ouverts après f0 : on cherche aussi un peu avant (jamais dans l'action)
+        i_fin = min(range(round(fin_min * FPS), n), key=lambda i: cout(fr[i]) + 0.003 * abs(i - f0))
     print(nom, 'écart à P (1 image sur 3) :', ' '.join(f'{ecart(f, P):.2f}' for f in fr[::3]), flush=True)
     if fin_nat is None:
         corps = fr[i_deb:i_fin + 1]
@@ -144,7 +205,8 @@ for nom, _, debut, fin_min, naturel, fin_nat in specs[1:]:
         corps = fr[i_deb:i_act] + fr[i_act:i_fin + 1:2]
     if naturel is not None:
         # départ plus tôt, là où la vidéo est encore proche de P ; la montée de Flow jusqu'à l'action est jouée en ×2
-        i_nat = round(naturel * FPS)
+        c0 = round(naturel * FPS)
+        i_nat = min(range(max(0, c0 - 4), c0 + 5), key=lambda i: cout(fr[i]))
         corps = fr[i_nat:i_deb:2] + corps
         i_deb = i_nat
     seq[f'P>{nom}'] = morph(P, corps[0], N_ENTREE)
@@ -152,11 +214,12 @@ for nom, _, debut, fin_min, naturel, fin_nat in specs[1:]:
     seq[f'{nom}>P'] = morph(corps[-1], P, N_RETOUR)
     info = {'entree': f'P>{nom}', 'corps': nom, 'retour': f'{nom}>P', 'sorties': {}}
     if nom in INTERRUPTIBLES:                        # interruptible : sortie vers P toutes les 12 images
-        for j in range(PAS_SORTIE, len(corps) - 1, PAS_SORTIE):
+        for j in points_de_sortie(corps, 1, len(corps) - 1):
             info['sorties'][j] = f'{nom}>P@{j}'
             seq[info['sorties'][j]] = morph(corps[j], P, N_SORTIE)
     reactions[nom] = info
-    print(f'{nom}: {i_deb / FPS:.2f}s → {i_fin / FPS:.2f}s ({len(corps)} images), écart entrée {ecart(P, corps[0]):.3f} '
+    print(f'{nom}: yeux début {blanc(corps[0]) / B_P:.2f} fin {blanc(corps[-1]) / B_P:.2f} ; '
+          f'{i_deb / FPS:.2f}s → {i_fin / FPS:.2f}s ({len(corps)} images), écart entrée {ecart(P, corps[0]):.3f} '
           f'sortie {ecart(corps[-1], P):.3f}', flush=True)
 
 # ---- 4. planches
