@@ -33,6 +33,8 @@ export class Stage {
   readonly logo: any;
   readonly reels: Reels;
   readonly tony: any;
+  /** Tabouret sous Tony (Tony est debout dessus). */
+  private stool: any;
   readonly fx = new PIXI.Container();
   readonly fsPanel = new PIXI.Container();
   private fsSpins: any;
@@ -48,18 +50,19 @@ export class Stage {
     const app = new PIXI.Application();
     await app.init({ resizeTo: window, background: '#120b10', antialias: true, resolution: Math.min(2, window.devicePixelRatio || 1), autoDensity: true });
     parent.appendChild(app.canvas);
-    const [day, night, frame, logo, cadre] = await Promise.all([
+    const [day, night, frame, logo, cadre, stool] = await Promise.all([
       PIXI.Assets.load('img/fond.webp'),
       PIXI.Assets.load('img/fond.webp'),
       PIXI.Assets.load('img/cadre.png'),
       PIXI.Assets.load('img/logo.png'),
       fetch('img/cadre.json').then((r) => r.json()),
+      PIXI.Assets.load('img/tabouret.png'),
       preload(),
     ]);
-    return new Stage(app, day, night, frame, logo, cadre, await tonyVideo);
+    return new Stage(app, day, night, frame, logo, cadre, await tonyVideo, stool);
   }
 
-  private constructor(app: any, day: any, night: any, frameTex: any, logoTex: any, cadre: { taille: number[]; fenetre: number[] }, tonyVideo: VideoTony) {
+  private constructor(app: any, day: any, night: any, frameTex: any, logoTex: any, cadre: { taille: number[]; fenetre: number[] }, tonyVideo: VideoTony, stoolTex: any) {
     this.app = app;
     this.bgDay = new PIXI.Sprite(day);
     this.bgNight = new PIXI.Sprite(night);
@@ -82,10 +85,12 @@ export class Stage {
 
     // Tony : version vidéo (Google Flow). Le rig Rig Lab reste disponible : makeRig('tony'), pivot (0, rigSize('tony')[1] / 2).
     this.tony = tonyVideo;
+    this.stool = new PIXI.Sprite(stoolTex);
+    this.stool.anchor.set(0.5, 1);
     void rigSize;
 
     this.buildFsPanel();
-    this.world.addChild(this.tony, this.frame, this.logo, this.fsPanel, this.fx);
+    this.world.addChild(this.stool, this.tony, this.frame, this.logo, this.fsPanel, this.fx);
 
     app.canvas.addEventListener('pointerdown', () => this.onTap());
     let last = performance.now();
@@ -184,8 +189,7 @@ export class Stage {
       this.logo.position.set(540, 150);
       this.frame.scale.set(0.92);
       this.frame.position.set(540, 712);
-      this.tony.scale.set(0.763);
-      this.tony.position.set(540, 1420);
+      this.placeTony(540, 1735, 0.6, 0.2);
       this.fsPanel.scale.set(0.7);
       this.fsPanel.position.set(880, 1300);
     } else {
@@ -194,12 +198,20 @@ export class Stage {
       this.logo.position.set(230, 120);
       this.frame.scale.set(0.86);
       this.frame.position.set(1000, 452);
-      this.tony.scale.set(0.949);
-      this.tony.position.set(455, 1080);
+      this.placeTony(490, 1082, 0.85, 0.24);
       this.fsPanel.scale.set(0.72);
       this.fsPanel.position.set(1720, 165);
     }
     void hud;
+  }
+
+  /** Tabouret posé au sol en (x, sol), Tony debout sur le coussin (SEAT = hauteur relative du dessus du coussin). */
+  private placeTony(x: number, sol: number, tonyScale: number, stoolScale: number) {
+    const SEAT = 0.2;
+    this.stool.scale.set(stoolScale);
+    this.stool.position.set(x, sol);
+    this.tony.scale.set(tonyScale);
+    this.tony.position.set(x, sol - this.stool.height * (1 - SEAT));
   }
 
   /** Position écran (dans world) du centre de la fenêtre des rouleaux. */

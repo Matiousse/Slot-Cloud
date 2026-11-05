@@ -29,10 +29,39 @@ def rogner(a, marge=4):
     return a[max(ys.min() - marge, 0):ys.max() + marge, max(xs.min() - marge, 0):xs.max() + marge]
 
 # ---- fond unique (les free spins le teintent en « nuit » dans le code)
-im = Image.open(os.path.join(SRC, 'Italian_pizzeria_interior_backgr_4b6c9118.jpg')).convert('RGB')
+# Décor intérieur avec vitrines sur la rue (Gemini). On efface le texte raté « FLOGR » du sachet de l'étagère.
+fondsrc = np.asarray(Image.open(os.path.join(SRC, 'decor', 'fond-interieur.jpg')).convert('RGB')).copy()
+x0, y0, x1, y1 = 381, 336, 424, 369                                      # les lettres seules (sans le bord du sachet)
+masque = np.zeros(fondsrc.shape[:2], np.uint8)
+masque[y0:y1, x0:x1] = (fondsrc[y0:y1, x0:x1].astype(np.int16).sum(2) < 330).astype(np.uint8) * 255
+masque[344:369, 424:430] = (fondsrc[344:369, 424:430].astype(np.int16).sum(2) < 330).astype(np.uint8) * 255  # fin du R
+masque = cv2.dilate(masque, np.ones((3, 3), np.uint8))
+fondsrc = cv2.inpaint(fondsrc, masque, 3, cv2.INPAINT_TELEA)
+Image.fromarray(fondsrc).crop((x0 - 30, y0 - 30, x1 + 30, y1 + 30)).resize((488, 296)).save(os.path.join(JEU, 'sources', 'decor', '_controle-texte.png'))
+im = Image.fromarray(fondsrc)
 im.resize((1920, round(1920 * im.height / im.width)), Image.LANCZOS).save(os.path.join(IMG, 'fond.webp'), quality=88)
 for vieux in ('fond-jour.webp', 'fond-nuit.webp'):
     if os.path.exists(os.path.join(IMG, vieux)): os.remove(os.path.join(IMG, vieux))
+
+# ---- tabouret de Tony (Gemini, fond magenta) : détouré, rogné, 600 px de haut ; « assise » = hauteur relative du
+# dessus du coussin où Tony pose les pieds (mesurée sur l'image).
+tab = np.asarray(Image.open(os.path.join(SRC, 'decor', 'tabouret.jpg')).convert('RGB'))
+a = tab.astype(np.int16); r, g, b = a[..., 0], a[..., 1], a[..., 2]
+fondm = (g < np.minimum(r, b) - 70) & (np.abs(r - b) < 90)
+m = (~fondm).astype(np.uint8)
+m = cv2.morphologyEx(m, cv2.MORPH_OPEN, np.ones((3, 3), np.uint8))
+n, lab, st, _ = cv2.connectedComponentsWithStats(m, connectivity=8)
+m = (lab == 1 + int(np.argmax(st[1:, cv2.CC_STAT_AREA]))).astype(np.uint8)
+alpha = np.clip((cv2.GaussianBlur(m.astype(np.float32), (0, 0), 1.0) - 0.2) / 0.6, 0, 1)
+rgb = tab.copy()
+bordt = (alpha > 0) & (cv2.erode(m, np.ones((7, 7), np.uint8)) == 0)
+rgb[bordt] = cv2.erode(tab, np.ones((5, 5), np.uint8))[bordt]
+tabr = rogner(np.dstack([rgb, (alpha * 255).astype(np.uint8)]), 2)
+ys = np.nonzero(tabr[..., 3] > 128)[0]
+tim = Image.fromarray(tabr)
+tim = tim.resize((round(600 * tim.width / tim.height), 600), Image.LANCZOS)
+tim.save(os.path.join(IMG, 'tabouret.png'), optimize=True)
+print('tabouret', tim.size)
 
 # ---- logo
 logo = rogner(cle_verte(np.asarray(Image.open(os.path.join(SRC, 'Pizza_Rush_game_logo_eeeb4730.jpg')).convert('RGB'))))
