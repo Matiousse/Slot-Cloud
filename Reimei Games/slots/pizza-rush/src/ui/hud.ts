@@ -268,6 +268,25 @@ export class Hud {
     this.el.classList.toggle('busy', busy);
     this.el.classList.toggle('fs', freeSpins);
     this.q('[data-a="spin"]').classList.toggle('spinning', busy);
+    if (busy && !this.wasBusy) this.turnSpinIcon();
+    this.wasBusy = busy;
+  }
+  /** Un seul tour complet de l'icône de spin à chaque lancement (départ vif, arrivée douce), piloté par
+   *  requestAnimationFrame pour suivre l'horloge de la page. */
+  private wasBusy = false;
+  private turnSpinIcon() {
+    const icon = this.q('[data-a="spin"]').querySelector<SVGElement>('svg:not(.fr)');
+    if (!icon) return;
+    const DUREE = 650;
+    const t0 = performance.now();
+    const step = (t: number) => {
+      const u = Math.min(1, (t - t0) / DUREE);
+      const e = 1 - Math.pow(1 - u, 3); // ease-out
+      icon.style.transform = `rotate(${e * 360}deg)`;
+      if (u < 1) requestAnimationFrame(step);
+      else icon.style.transform = '';
+    };
+    requestAnimationFrame(step);
   }
   setBuyAllowed(on: boolean) {
     this.canBuy = on;

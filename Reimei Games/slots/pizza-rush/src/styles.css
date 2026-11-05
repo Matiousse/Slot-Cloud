@@ -60,9 +60,8 @@ button.glass:active { transform: scale(.95); }
 .big.buy b { font-size: calc(var(--u) * 2); letter-spacing: .03em; }
 .big.spin { width: calc(var(--u) * 15); height: calc(var(--u) * 13); padding-left: calc(var(--u) * 1); }
 .big.spin svg:not(.fr) { width: 64%; height: 64%; color: #e9e3ea; filter: drop-shadow(0 0 calc(var(--u) * .25) #000) drop-shadow(0 calc(var(--u) * .3) 0 #000a); }
-.big.spin.spinning svg:not(.fr) { animation: tourne .7s linear infinite; }
+.big.spin svg:not(.fr) { transform-box: fill-box; transform-origin: 50% 50%; will-change: transform; }
 #hud.fs .big.spin svg:not(.fr) { color: #ffd34a; }
-@keyframes tourne { to { transform: rotate(360deg); } }
 
 /* texte ballon (Modak) : blanc crème brillant, contour noir */
 .big.buy b, .ante span, .val b, .winbox b, .val span, .winbox span {
