@@ -51,8 +51,8 @@ export class Stage {
     await app.init({ resizeTo: window, background: '#120b10', antialias: true, resolution: Math.min(2, window.devicePixelRatio || 1), autoDensity: true });
     parent.appendChild(app.canvas);
     const [day, night, frame, logo, cadre, stool] = await Promise.all([
-      PIXI.Assets.load('img/fond.webp'),
-      PIXI.Assets.load('img/fond.webp'),
+      loadBackground(),
+      null,
       PIXI.Assets.load('img/cadre.png'),
       PIXI.Assets.load('img/logo.png'),
       fetch('img/cadre.json').then((r) => r.json()),
@@ -65,7 +65,8 @@ export class Stage {
   private constructor(app: any, day: any, night: any, frameTex: any, logoTex: any, cadre: { taille: number[]; fenetre: number[] }, tonyVideo: VideoTony, stoolTex: any) {
     this.app = app;
     this.bgDay = new PIXI.Sprite(day);
-    this.bgNight = new PIXI.Sprite(night);
+    void night;
+    this.bgNight = new PIXI.Sprite(day); // même texture (vidéo comprise), teintée
     this.bgNight.alpha = 0;
     this.bgNight.tint = 0x5a5fa8; // même pizzeria, ambiance de nuit pour les free spins
     for (const b of [this.bgDay, this.bgNight]) b.anchor.set(0.5);
@@ -102,6 +103,11 @@ export class Stage {
       this.reels.update(dt);
       updateRigs(dt);
       this.tony.update?.(dt);
+      const fond = (window as any).__fond; // mode film : la vidéo du fond suit l'horloge de la page
+      if (fond && !fond.manual) {
+        fond.t = (fond.t ?? 0) + dt;
+        fond.video.currentTime = (fond.t / 1000) % fond.video.duration;
+      }
       this.idleBob += dt;
       this.logo.rotation = Math.sin(this.idleBob / 1400) * 0.015;
     });
@@ -189,7 +195,7 @@ export class Stage {
       this.logo.position.set(540, 150);
       this.frame.scale.set(0.92);
       this.frame.position.set(540, 712);
-      this.placeTony(540, 1735, 0.6, 0.2);
+      this.placeTony(540, 1690, 0.7, 0.24);
       this.fsPanel.scale.set(0.7);
       this.fsPanel.position.set(880, 1300);
     } else {
@@ -198,7 +204,7 @@ export class Stage {
       this.logo.position.set(230, 120);
       this.frame.scale.set(0.86);
       this.frame.position.set(1000, 452);
-      this.placeTony(490, 1082, 0.85, 0.24);
+      this.placeTony(390, 1060, 0.949, 0.33);
       this.fsPanel.scale.set(0.72);
       this.fsPanel.position.set(1720, 165);
     }
@@ -219,5 +225,43 @@ export class Stage {
     const [fx, fy, fw, fh] = this.win;
     const p = this.frame.toGlobal(new PIXI.Point(fx + fw / 2, fy + fh / 2));
     return this.world.toLocal(p);
+  }
+}
+
+// ---------------------------------------------------------------- fond animé
+// Vidéo des passants (Google Flow) mise en boucle sans raccord : WebM (VP9) ou MP4 (H.264, Safari) selon le navigateur.
+// Muette, en boucle, lue en ligne. Si elle ne peut pas se charger, on garde l'image fixe img/fond.webp.
+// ?film=1 : la vidéo ne joue plus seule, elle suit l'horloge de la page (tournages image par image).
+async function loadBackground(): Promise<any> {
+  try {
+    const v = document.createElement('video');
+    v.muted = true;
+    v.loop = true;
+    v.playsInline = true;
+    v.setAttribute('playsinline', '');
+    v.preload = 'auto';
+    const webm = v.canPlayType('video/webm; codecs="vp9"');
+    v.src = webm ? 'img/fond.webm' : 'img/fond.mp4';
+    await new Promise<void>((ok, ko) => {
+      v.addEventListener('loadeddata', () => ok(), { once: true });
+      v.addEventListener('error', () => ko(new Error('vidéo du fond')), { once: true });
+      setTimeout(() => ko(new Error('vidéo du fond : délai')), 15000);
+    });
+    const film = new URLSearchParams(location.search).get('film') === '1';
+    const source = new PIXI.VideoSource({ resource: v, autoPlay: !film, loop: true, muted: true, playsinline: true });
+    const tex = new PIXI.Texture({ source });
+    if (film) {
+      v.pause();
+      (window as any).__fond = { video: v, source };
+    } else {
+      const relance = () => { if (v.paused) void v.play().catch(() => {}); };
+      relance();
+      window.addEventListener('pointerdown', relance); // certains navigateurs attendent un geste
+      document.addEventListener('visibilitychange', relance);
+    }
+    return tex;
+  } catch (e) {
+    console.warn(e);
+    return PIXI.Assets.load('img/fond.webp');
   }
 }

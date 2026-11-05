@@ -40,6 +40,10 @@ fondsrc = cv2.inpaint(fondsrc, masque, 3, cv2.INPAINT_TELEA)
 Image.fromarray(fondsrc).crop((x0 - 30, y0 - 30, x1 + 30, y1 + 30)).resize((488, 296)).save(os.path.join(JEU, 'sources', 'decor', '_controle-texte.png'))
 im = Image.fromarray(fondsrc)
 im.resize((1920, round(1920 * im.height / im.width)), Image.LANCZOS).save(os.path.join(IMG, 'fond.webp'), quality=88)
+# fond animé (vidéo des passants, Google Flow) : boucle sans raccord (la dernière seconde se fond dans la première),
+# 1600×900, sans son, WebM VP9 + MP4 H.264. Fabriquée une fois avec ffmpeg (commande dans anims/LISEZMOI.md).
+for ext in ('webm', 'mp4'):
+    shutil.copy(os.path.join(SRC, 'decor', f'_fond-boucle.{ext}'), os.path.join(IMG, f'fond.{ext}'))
 for vieux in ('fond-jour.webp', 'fond-nuit.webp'):
     if os.path.exists(os.path.join(IMG, vieux)): os.remove(os.path.join(IMG, vieux))
 

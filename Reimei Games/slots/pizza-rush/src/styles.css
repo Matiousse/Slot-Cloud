@@ -12,8 +12,9 @@ h2, h3, .offer .price, table.pay td, table.pay th, #splash .cta, #splash .sc h3,
 /* ---------------------------------------------------------------- commandes (pas de barre : deux panneaux latéraux) */
 /* Police « ballon » : Modak (OFL), gonflée par un dégradé brillant, un reflet blanc et un contour noir. */
 #hud { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
-.side { position: absolute; top: 50%; transform: translateY(-56%); display: flex; align-items: flex-start; gap: calc(var(--u) * .9); pointer-events: none; }
-.side.left { left: max(calc(var(--u) * 1.2), env(safe-area-inset-left, 0px)); }
+/* Panneaux latéraux compacts : tout y est mesuré en --u, on le réduit ici (×0,72) pour laisser la place à Tony. */
+.side { --u: calc(min(1vw, 1.78vh) * .72); position: absolute; top: 50%; transform: translateY(-56%); display: flex; align-items: flex-start; gap: calc(var(--u) * .9); pointer-events: none; }
+.side.left { top: 23%; transform: none; left: max(calc(var(--u) * 1.6), env(safe-area-inset-left, 0px)); }
 .side.right { right: max(calc(var(--u) * 1.2), env(safe-area-inset-right, 0px)); }
 .side > * { pointer-events: auto; }
 .stack { display: flex; flex-direction: column; align-items: center; gap: calc(var(--u) * 1.1); }
@@ -135,6 +136,7 @@ table.pay tr:nth-child(even) { background: #ffffff0d; }
 /* ---------------------------------------------------------------- portrait (mobile) */
 @media (orientation: portrait) {
   :root { --u: min(1.75vw, 0.95vh); }
+  .side, .side.left { --u: calc(min(1.75vw, 0.95vh) * .8); top: auto; transform: none; }
   .side { top: auto; transform: none; bottom: max(calc(var(--u) * 2.5), env(safe-area-inset-bottom, 0px)); align-items: flex-end; }
   .minis { margin-top: 0; }
   .big { width: calc(var(--u) * 15); height: calc(var(--u) * 15); }
