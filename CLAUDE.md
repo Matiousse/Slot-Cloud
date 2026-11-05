@@ -3,7 +3,7 @@
 - L'utilisateur parle français : réponds en français, objectivement.
 - Studio : **Reimei Games** (黎明, l'aube). Intro commune : `Reimei Games/intro/`. Chaque slot : `Reimei Games/slots/<jeu>/`
   (projet autonome : maths Stake Engine dans `math/`, règles dans `shared/`, voir son README).
-- Jeux : `raijin-overload` (RTP 96,10 %), `kitsune-rising` (maths 96,70 %, base de Pizza Rush), `pizza-rush` (RTP 96,70 %,
+- Jeux : `raijin-overload` (RTP 96,10 %), `kitsune-rising` (maths 96,70 %, base de Pizza Rush), `pizza-rush` (RTP 96,00 % dans les 7 modes, choix de l'utilisateur ;
   jeu jouable : PixiJS + rigs Rig Lab + son généré ; style cartoon Brawl Stars contours noirs ; images de l'utilisateur
   sur le Drive « Casino/Pizza Rush », on ne travaille que dans ce dossier Casino). Démo en ligne : artifact « Pizza Rush ».
 - Tony (perso Pizza Rush) : la tête ne change jamais, seuls les traits du visage sont permutés ; les bras ne bougent

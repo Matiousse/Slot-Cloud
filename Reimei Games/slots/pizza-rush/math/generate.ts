@@ -27,7 +27,7 @@
 //      super   = T2 with 5 spins and a guaranteed Wild per spin (cost 200x)
 //      mystery = a·nb + b·T2 + d·T3 (d = 15% MIDNIGHT RUSH, b solved), cost 300x
 // 4. Weights are written as uint64 integers; the last unit of RTP error is
-//    absorbed by one zero-win book so every mode is exactly 96.10%.
+//    absorbed by one zero-win book so every mode is exactly on TARGET_RTP (96.00%).
 
 import { Worker } from 'node:worker_threads';
 import { buildSync } from 'esbuild';

@@ -14,7 +14,7 @@ export const ROWS = 4;
 export const WAYS = Math.pow(ROWS, REELS);
 
 /** Target RTP for every bet mode. */
-export const TARGET_RTP = 0.967;
+export const TARGET_RTP = 0.96;
 /** Maximum win, in multiples of the base bet. */
 export const WINCAP_X = 10000;
 export const WINCAP = WINCAP_X * 100;

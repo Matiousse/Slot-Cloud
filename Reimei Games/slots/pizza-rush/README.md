@@ -1,6 +1,8 @@
 # PIZZA RUSH (Reimei Games)
 
-Slot 5×4, 1024 ways, **RTP 96,70 %** dans les 4 modes (base 1x, ante 3x = bonus ×5, bonus 100x, super 300x), gain max 10 000x.
+Slot 5×4, 1024 ways, **RTP 96,00 %** dans les 7 modes, gain max 10 000x (atteignable dans chaque mode) :
+base 1x · boost 2x (free spins ×3) · superboost 10x (×19) · rush 4x (Rush Hour garanti) · bonus 100x (Lunch Rush) ·
+super 200x (Dinner Rush, 5 tours, wild garanti à chaque tour) · mystery 300x (pas de commande / Dinner / Midnight Rush).
 Style cartoon Brawl Stars, contours noirs. Héros : Tony le livreur.
 
 - **Rush Hour** (jeu de base) : Tony passe en scooter et pose 1 à 4 wilds (parts dorées) sur les rouleaux 2 à 5.
