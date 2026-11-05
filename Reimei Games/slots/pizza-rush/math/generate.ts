@@ -16,10 +16,16 @@
 // 3. A single exact correction ("tilt") moves each pool mean onto its design
 //    target. Mode tables are mixtures of the pools:
 //      base  = (1-p)·nb + p·Σ π_k·T_k
-//      ante  = (1-5p)·nb + 5p·Σ π_k·T_k      (5x bonus chance, cost 3x)
-//      bonus = T1 (cost 100x)    super = T2 (cost 300x)
-//    With nb mean = RTP/2 and p = (RTP/2)/(Wb - RTP/2) both base and ante land
-//    exactly on the target RTP (π_k = natural tier split of the base reels).
+//      boost      = (1-3p)·nb + 3p·Σ π_k·T_k     (free spins 3x as often, cost 2x)
+//      superboost = (1-19p)·nb + 19p·Σ π_k·T_k   (19x as often, cost 10x)
+//    With nb mean = RTP/2 and p = (RTP/2)/(Wb - RTP/2) every k-boost lands
+//    exactly on the target RTP at cost (1+k)/2 (π_k = natural tier split).
+//      rush    = (1-q)·RN + q·Σ π_k·RT_k : guaranteed Rush Hour (2-4 Wilds) on every round, q = natural bonus
+//                odds; RN = no-bonus rounds (tilted to close the RTP), RT_k = rounds triggering tier k (max-win share
+//                reserved then tilted back to their natural mean, so 10,000x stays reachable), cost 4x
+//      bonus   = T1 (cost 100x)
+//      super   = T2 with 5 spins and a guaranteed Wild per spin (cost 200x)
+//      mystery = a·nb + b·T2 + d·T3 (d = 15% MIDNIGHT RUSH, b solved), cost 300x
 // 4. Weights are written as uint64 integers; the last unit of RTP error is
 //    absorbed by one zero-win book so every mode is exactly 96.10%.
 
@@ -47,6 +53,11 @@ const POOLS: Record<string, { kind: PoolKind; sims: number; seed: number }> = {
   t1: { kind: 1, sims: QUICK ? 200_000 : 12_000_000, seed: 0x0c10_0101 },
   t2: { kind: 2, sims: QUICK ? 100_000 : 8_000_000, seed: 0x0c10_0201 },
   t3: { kind: 3, sims: QUICK ? 50_000 : 1_500_000, seed: 0x0c10_0301 },
+  rush: { kind: 'rush', sims: QUICK ? 1_000_000 : 16_000_000, seed: 0x0c10_0401 },
+  r1: { kind: 'r1', sims: QUICK ? 100_000 : 6_000_000, seed: 0x0c10_0411 },
+  r2: { kind: 'r2', sims: QUICK ? 50_000 : 4_000_000, seed: 0x0c10_0421 },
+  r3: { kind: 'r3', sims: QUICK ? 30_000 : 1_000_000, seed: 0x0c10_0431 },
+  w2: { kind: 'w2', sims: QUICK ? 100_000 : 6_000_000, seed: 0x0c10_0501 },
 };
 
 const k = (n: number) => (QUICK ? Math.round(n / 10) : n);
@@ -57,11 +68,20 @@ const BUDGET = {
   t1Base: k(15_000),
   t2Base: k(8_000),
   t3Base: k(4_000),
+  rush: k(101_000),
+  r1: k(15_000),
+  r2: k(8_000),
+  r3: k(4_000),
+  w2Buy: k(101_000),
+  t3Mys: k(60_000),
 };
+// natural design mean of DINNER RUSH when it is won in the base game (unchanged from the original 300x buy)
+const E2_NATURAL_COST = 300;
 
 // payout bands (book units). Band i = [EDGES[i], EDGES[i+1]).
 const NB_EDGES = [0, 1, 100, 500, 2_000, 10_000, 100_000, WINCAP, WINCAP + 1];
 const FS_EDGES = [0, 1_000, 3_000, 10_000, 30_000, 100_000, 300_000, WINCAP, WINCAP + 1];
+const RUSH_EDGES = NB_EDGES;
 
 // ---------------------------------------------------------------- workers
 
@@ -344,7 +364,7 @@ function modeStats(t: IntTable, cost: number, entries: Entry[]) {
     ex2 += p[i] * xm * xm;
     if (x > 0) hit += p[i];
     if (x >= WINCAP) cap += p[i];
-    if (entries[i].pool !== 'nb') bonus += p[i];
+    if (entries[i].events.includes('"freeSpinTrigger"')) bonus += p[i];
     distinct.add(x);
     const b = bandOf(x, bands);
     bandP[b] += p[i];
@@ -394,22 +414,51 @@ async function main() {
     t1Base: stratifiedSample(payouts.t1, FS_EDGES, BUDGET.t1Base, k(600), 4),
     t2Base: stratifiedSample(payouts.t2, FS_EDGES, BUDGET.t2Base, k(500), 5),
     t3Base: stratifiedSample(payouts.t3, FS_EDGES, BUDGET.t3Base, k(300), 6),
+    rush: stratifiedSample(payouts.rush, RUSH_EDGES, BUDGET.rush, k(2_000), 7),
+    r1: stratifiedSample(payouts.r1, FS_EDGES, BUDGET.r1, k(600), 10),
+    r2: stratifiedSample(payouts.r2, FS_EDGES, BUDGET.r2, k(500), 11),
+    r3: stratifiedSample(payouts.r3, FS_EDGES, BUDGET.r3, k(300), 12),
+    w2Buy: stratifiedSample(payouts.w2, FS_EDGES, BUDGET.w2Buy, k(3_000), 8),
+    t3Mys: stratifiedSample(payouts.t3, FS_EDGES, BUDGET.t3Mys, k(2_000), 9),
   };
 
   // 3. exact means
   const costOf = (name: string) => MODES.find((m) => m.name === name)!.cost;
   const E1 = R * costOf('bonus');
-  const E2 = R * costOf('super');
+  const E2 = R * E2_NATURAL_COST;
   console.log('targets:');
   boostCap(samples.t1Base, 1 / 20_000, 'T1 base');
   boostCap(samples.t2Base, 1 / 10_000, 'T2 base');
   tilt(samples.nb, R / 2, 'no-bonus');
   tilt(samples.t1Buy, E1, 'T1 buy');
-  tilt(samples.t2Buy, E2, 'T2 buy');
+  tilt(samples.t2Buy, E2, 'T2 mystery');
+  // GUARANTEED RUSH
+  const q = NATURAL.pTrigger;
+  const piR = NATURAL.tierSplit;
+  let EbR = 0;
+  for (const [t, share] of [[1, 1 / 20_000], [2, 1 / 10_000], [3, 1 / 5_000]] as const) {
+    const s = samples[`r${t}` as 'r1' | 'r2' | 'r3'];
+    const natural = mean(s.x, s.w);
+    boostCap(s, share, `R${t}`);
+    tilt(s, natural, `R${t}`);
+    EbR += piR[t] * natural;
+  }
+  const rushTarget = (R * costOf('rush') - q * EbR) / (1 - q);
+  tilt(samples.rush, rushTarget, 'rush nb');
+  tilt(samples.w2Buy, R * costOf('super'), 'golden');
   tilt(samples.t1Base, E1, 'T1 base');
   tilt(samples.t2Base, E2, 'T2 base');
   const E3 = mean(samples.t3Base.x, samples.t3Base.w); // natural (no buy mode for tier 3)
-  console.log(`  T3 natural mean ${(E3 / 100).toFixed(2)}x`);
+  const E3m = mean(samples.t3Mys.x, samples.t3Mys.w);
+  console.log(`  T3 natural mean ${(E3 / 100).toFixed(2)}x (mystery sample ${(E3m / 100).toFixed(2)}x)`);
+  // mystery: a·nb + b·T2 + d·T3 with nb mean R/2
+  const myst = MODES.find((m) => m.name === 'mystery')!;
+  const dM = myst.midnight!;
+  const m0 = R / 2;
+  const bM = (R * myst.cost - m0 - dM * (E3m - m0)) / (E2 - m0);
+  const aM = 1 - bM - dM;
+  if (!(bM > 0 && aM > 0)) throw new Error(`mystery mix impossible a=${aM} b=${bM}`);
+  console.log(`mystery: no order ${(aM * 100).toFixed(2)}%  dinner ${(bM * 100).toFixed(2)}%  midnight ${(dM * 100).toFixed(2)}%`);
 
   const pi = NATURAL.tierSplit;
   const Wb = pi[1] * E1 + pi[2] * E2 + pi[3] * E3;
@@ -433,6 +482,12 @@ async function main() {
   const t3BaseE = await record(samples.t3Base, 't3');
   const t1BuyE = await record(samples.t1Buy, 't1');
   const t2BuyE = await record(samples.t2Buy, 't2');
+  const rushE = await record(samples.rush, 'rush');
+  const r1E = await record(samples.r1, 'r1');
+  const r2E = await record(samples.r2, 'r2');
+  const r3E = await record(samples.r3, 'r3');
+  const w2E = await record(samples.w2Buy, 'w2');
+  const t3MysE = await record(samples.t3Mys, 't3');
   pool.close();
 
   const mix = (boost: number): Entry[] => [
@@ -444,9 +499,21 @@ async function main() {
 
   const modeEntries: Record<string, Entry[]> = {
     base: mix(1),
-    ante: mix(MODES.find((m) => m.name === 'ante')!.boost!),
+    boost: mix(MODES.find((m) => m.name === 'boost')!.boost!),
+    superboost: mix(MODES.find((m) => m.name === 'superboost')!.boost!),
+    rush: [
+      ...rushE.map((e) => ({ ...e, w: e.w * (1 - q) })),
+      ...r1E.map((e) => ({ ...e, w: e.w * q * piR[1] })),
+      ...r2E.map((e) => ({ ...e, w: e.w * q * piR[2] })),
+      ...r3E.map((e) => ({ ...e, w: e.w * q * piR[3] })),
+    ],
     bonus: t1BuyE,
-    super: t2BuyE,
+    super: w2E,
+    mystery: [
+      ...nbE.map((e) => ({ ...e, w: e.w * aM })),
+      ...t2BuyE.map((e) => ({ ...e, w: e.w * bM })),
+      ...t3MysE.map((e) => ({ ...e, w: e.w * dM })),
+    ],
   };
 
   // 5. write files
@@ -463,14 +530,14 @@ async function main() {
     index.modes.push({ name: m.name, cost: m.cost, events, weights });
     writeCsv(path.join(OUT, weights), table);
     stats[m.name] = { cost: m.cost, ...modeStats(table, m.cost, entries) };
-    // base and ante share the exact same books (only weights differ)
-    if (m.name === 'ante') continue;
+    // base and the boost modes share the exact same books (only weights differ)
+    if (m.kind === 'boost') continue;
     const file = path.join(OUT, events);
     if (m.name === 'base') baseBooks = file;
     writes.push(writeBooks(file, entries));
   }
   await Promise.all(writes);
-  fs.copyFileSync(baseBooks, path.join(OUT, 'books_ante.jsonl.zst'));
+  for (const m of MODES) if (m.kind === 'boost') fs.copyFileSync(baseBooks, path.join(OUT, `books_${m.name}.jsonl.zst`));
   fs.writeFileSync(path.join(OUT, 'index.json'), JSON.stringify(index, null, 2) + '\n');
 
   // 6. summary for the frontend + report
@@ -479,7 +546,7 @@ async function main() {
     version: GAME_VERSION,
     targetRtp: TARGET_RTP,
     maxWinX: WINCAP_X,
-    bonusOdds: { base: 1 / stats.base.bonusProb, ante: 1 / stats.ante.bonusProb },
+    bonusOdds: Object.fromEntries(MODES.filter((m) => m.kind === 'base' || m.kind === 'boost').map((m) => [m.name, 1 / stats[m.name].bonusProb])),
     tierSplit: pi,
     modes: Object.fromEntries(
       Object.entries(stats).map(([name, s]) => [
@@ -494,7 +561,7 @@ async function main() {
     ),
   };
   fs.writeFileSync(path.join(ROOT, 'shared', 'math-summary.json'), JSON.stringify(summary, null, 2) + '\n');
-  fs.writeFileSync(path.join(ROOT, 'math', 'stats.json'), JSON.stringify({ summary, stats, design: { p, Wb, E1, E2, E3 } }, null, 2) + '\n');
+  fs.writeFileSync(path.join(ROOT, 'math', 'stats.json'), JSON.stringify({ summary, stats, design: { p, Wb, E1, E2, E3, mystery: { aM, bM, dM } } }, null, 2) + '\n');
 
   console.log('\nmode     cost   RTP        hit      sd      max win odds     bonus odds   books');
   for (const [name, s] of Object.entries(stats)) {
@@ -502,7 +569,7 @@ async function main() {
       `${name.padEnd(8)} ${String(s.cost).padStart(4)}  ${(s.rtp * 100).toFixed(6)}%  ${(s.hitRate * 100).toFixed(2).padStart(6)}%  ${s.stdDev
         .toFixed(2)
         .padStart(6)}  1/${Math.round(1 / s.maxWinProb).toLocaleString().padEnd(12)}  ${
-        name === 'base' || name === 'ante' ? '1/' + (1 / s.bonusProb).toFixed(1) : '-'
+        s.bonusProb > 0 && s.bonusProb < 1 ? '1/' + (1 / s.bonusProb).toFixed(1) : '-'
       }`.padEnd(98) + s.books.toLocaleString(),
     );
   }

@@ -109,27 +109,44 @@ export const TIERS: Record<Tier, TierInfo> = {
   3: { tier: 3, key: 'midnightRush', scatters: 5, spins: 15, startTips: 5 },
 };
 
+/** DINNER RUSH BONUS (buy): Dinner Rush with this many free spins and a guaranteed Wild on every spin. */
+export const GOLDEN_SPINS = 5;
+
 /** 3+ scatters during free spins award extra spins. */
 export const RETRIGGER_SCATTERS = 3;
 export const RETRIGGER_SPINS = 5;
 
 // ---------------------------------------------------------------- bet modes
 
-export type ModeKind = 'base' | 'ante' | 'buy';
+export type ModeKind = 'base' | 'boost' | 'rush' | 'buy' | 'mystery';
 
 export interface ModeInfo {
   name: string;
   cost: number;
   kind: ModeKind;
   tier?: Tier;
+  /** boost: free spins this many times more likely than in the base game */
   boost?: number;
+  /** buy with a guaranteed Wild on every free spin and GOLDEN_SPINS spins */
+  golden?: boolean;
+  /** mystery: share of rounds that become MIDNIGHT RUSH (the rest: DINNER RUSH or no order) */
+  midnight?: number;
+  /** stays on, every spin, until the player switches it off (otherwise a one-off bonus buy) */
+  persistent?: boolean;
 }
 
+// Six features on the bonus screen, as in the reference layout:
+//   TIP BOOST (2x, free spins 3x as often) · ORDER BOOST (10x, 19x as often) · GUARANTEED RUSH (4x, Rush Hour on every
+//   spin) · LUNCH RUSH BONUS (100x) · DINNER RUSH BONUS (200x, 5 spins, guaranteed Wild) · MYSTERY ORDER (300x).
+// Boost costs are exact: with the no-bonus pool at RTP/2, a k-times boost costs (1 + k) / 2.
 export const MODES: ModeInfo[] = [
   { name: 'base', cost: 1, kind: 'base' },
-  { name: 'ante', cost: 3, kind: 'ante', boost: 5 },
+  { name: 'boost', cost: 2, kind: 'boost', boost: 3, persistent: true },
+  { name: 'superboost', cost: 10, kind: 'boost', boost: 19, persistent: true },
+  { name: 'rush', cost: 4, kind: 'rush', persistent: true },
   { name: 'bonus', cost: 100, kind: 'buy', tier: 1 },
-  { name: 'super', cost: 300, kind: 'buy', tier: 2 },
+  { name: 'super', cost: 200, kind: 'buy', tier: 2, golden: true },
+  { name: 'mystery', cost: 300, kind: 'mystery', midnight: 0.15, persistent: true },
 ];
 
 export const modeByName = (name: string) =>

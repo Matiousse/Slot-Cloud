@@ -10,7 +10,10 @@
   JAMAIS (ils sont dans le corps) ; casquette d'origine (pas de casquette reconstruite).
 - Interface Pizza Rush : pas de barre en bas ; commandes en panneaux « verre fumé » biseautés (liseré blanc fin, bords en
   biais, comme la référence donnée par l'utilisateur) : achat bonus avec le logo Reimei Games en bas à gauche AU MÊME NIVEAU que le spin en bas
-  à droite (+/− et turbo/auto autour), police « ballon » Modak (OFL) partout. Polices : toujours sous licence libre (OFL).
+  à droite (+/− et turbo/auto autour). Police : Titan One (titres, chiffres, boutons) + Fredoka (textes), toutes deux OFL,
+  choisies sur la référence de l'utilisateur (avant : Modak). Polices : toujours sous licence libre (OFL).
+  Écran bonus = 6 vignettes comme la référence (Crack the Pig) : TIP BOOST 2x, ORDER BOOST 10x, GUARANTEED RUSH 4x (modes qui
+  restent actifs), LUNCH RUSH BONUS 100x, DINNER RUSH BONUS 200x (5 FS, wild garanti), MYSTERY ORDER 300x/spin ; l'Ante est supprimé.
   Décor : intérieur de la pizzeria avec vitrines, fond VIDÉO en boucle (passants), Tony debout sur un tabouret entre la colonne de gauche et le cadre.
 - Tony est joué par des VIDÉOS Google Flow (repos + 7 réactions : gain, grosgain, presque, perte, bonus, rush, suspense ; voir `anims/LISEZMOI.md`, outil `atelier/pizza-rush/tony_videos.py`). Ancienne note : vidéo de respiration détourée en planches de sprites
   (`atelier/pizza-rush/tony_video.py`, 12 i/s, boucle aller-retour). Le rig Rig Lab de Tony reste dans le code (désactivé).

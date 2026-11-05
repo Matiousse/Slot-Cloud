@@ -28,6 +28,9 @@ import {
   TIERS,
   WINCAP,
   WINCAP_X,
+  GOLDEN_SPINS,
+  MODES,
+  type ModeInfo,
   type Book,
   type SymbolCode,
 } from '../shared/game';
@@ -84,7 +87,7 @@ function evaluate(board: SymbolCode[][], mult: number) {
   return { wins, total };
 }
 
-function checkBook(book: Book, where: string) {
+function checkBook(book: Book, where: string, mode: ModeInfo) {
   const ev = book.events;
   if (!Array.isArray(ev) || ev.length === 0) return fail(`${where}: no events`);
   let total = 0;
@@ -112,11 +115,14 @@ function checkBook(book: Book, where: string) {
           fsPlayed++;
           if (!e.fs || e.fs[0] !== fsPlayed || e.fs[1] !== fsTotal) fail(`${where}: fs counter`);
           if (e.rush) fail(`${where}: rush hour in free spins`);
-          tips = Math.min(MAX_TIPS, tips + b.flat().filter((c) => c === 'WD').length);
+          const wilds = b.flat().filter((c) => c === 'WD').length;
+          if (mode.golden && wilds === 0) fail(`${where}: golden free spin without a Wild`);
+          tips = Math.min(MAX_TIPS, tips + wilds);
           mult = TIP_MULT[tips];
           if (e.tips !== tips || e.mult !== mult) fail(`${where}: tips ${e.tips}/${e.mult} expected ${tips}/${mult}`);
         } else {
           if (i !== 0) fail(`${where}: base spin not first`);
+          if (mode.kind === 'rush' && !((e.rush?.length ?? 0) >= 2)) fail(`${where}: guaranteed rush without 2-4 wilds`);
           for (const [r, y] of e.rush ?? []) {
             if (r < 1 || r >= REELS || y < 0 || y >= ROWS) fail(`${where}: rush hour out of reels 2-5`);
             else if (b[r][y] === 'SC' || b[r][y] === 'WD') fail(`${where}: rush hour on scatter/wild`);
@@ -152,7 +158,8 @@ function checkBook(book: Book, where: string) {
         fsTotal = e.spins;
         tips = e.tips;
         full = tips >= MAX_TIPS;
-        if (e.spins !== info.spins || e.tips !== info.startTips) fail(`${where}: wrong trigger spins/tips`);
+        const spins = mode.golden ? GOLDEN_SPINS : info.spins;
+        if (e.spins !== spins || e.tips !== info.startTips) fail(`${where}: wrong trigger spins/tips`);
         if (lastScatters !== info.scatters && !(e.tier === 3 && lastScatters >= 5)) fail(`${where}: trigger tier vs scatters`);
         break;
       }
@@ -212,7 +219,7 @@ function main() {
   const index = JSON.parse(fs.readFileSync(path.join(DIR, 'index.json'), 'utf8'));
   if (!Array.isArray(index.modes) || index.modes.length === 0) throw new Error('index.json: no modes');
   const reports: ModeReport[] = [];
-  const bookCache = new Map<string, Book[]>();
+  const bookCache = new Map<string, { id: number; payoutMultiplier: number; bonus: boolean }[]>();
 
   for (const m of index.modes) {
     console.log(`mode ${m.name} (cost ${m.cost})`);
@@ -235,26 +242,34 @@ function main() {
       if (BigInt(parts[1]) === 0n) fail(`${m.weights}:${i + 1} zero weight`);
     });
 
-    // books (base and ante share identical files: verify once, compare hashes)
+    // books (base and the boost modes share identical files: verify once, compare hashes)
     const file = path.join(DIR, m.events);
     const raw = fs.readFileSync(file);
     const key = raw.length + ':' + raw.subarray(0, 64).toString('hex') + raw.subarray(-64).toString('hex');
     let books = bookCache.get(key);
     if (!books) {
-      const text = zlib.zstdDecompressSync(raw).toString('utf8');
-      const lines = text.split('\n');
-      if (lines[lines.length - 1] === '') lines.pop();
-      books = lines.map((l, i) => {
-        try {
-          return JSON.parse(l) as Book;
-        } catch {
-          fail(`${m.events}: line ${i + 1} is not JSON`);
-          return { id: -1, events: [], payoutMultiplier: -1 };
+      // ligne par ligne, et on ne garde de chaque livre que ce qui sert aux statistiques (mémoire : mystery est gros)
+      const buf = zlib.zstdDecompressSync(raw);
+      const mode = MODES.find((x) => x.name === m.name) ?? MODES[0];
+      books = [];
+      let n = 0;
+      for (let start = 0; start < buf.length; ) {
+        let end = buf.indexOf(10, start);
+        if (end < 0) end = buf.length;
+        if (end > start) {
+          n++;
+          let b: Book;
+          try {
+            b = JSON.parse(buf.toString('utf8', start, end)) as Book;
+          } catch {
+            fail(`${m.events}: line ${n} is not JSON`);
+            b = { id: -1, events: [], payoutMultiplier: -1 } as unknown as Book;
+          }
+          for (const f of ['id', 'events', 'payoutMultiplier']) if (!(f in b)) fail(`${m.events}: book ${b.id} missing ${f}`);
+          checkBook(b, `${m.name}#${b.id}`, mode);
+          books.push({ id: b.id, payoutMultiplier: b.payoutMultiplier, bonus: b.events.some((e) => e.type === 'freeSpinTrigger') });
         }
-      });
-      for (const b of books) {
-        for (const f of ['id', 'events', 'payoutMultiplier']) if (!(f in b)) fail(`${m.events}: book ${b.id} missing ${f}`);
-        checkBook(b, `${m.name}#${b.id}`);
+        start = end + 1;
       }
       bookCache.set(key, books);
       console.log(`  ${books.length.toLocaleString()} books replayed`);
@@ -285,7 +300,7 @@ function main() {
       ex2 += p * x * x;
       if (X[i] > 0) hit += p;
       if (X[i] >= WINCAP) cap += p;
-      if (books![i].events.some((e) => e.type === 'freeSpinTrigger')) bonus += p;
+      if (books![i].bonus) bonus += p;
       if (p > top) top = p;
       let b = bandEdges.length - 2;
       while (b > 0 && X[i] < bandEdges[b]) b--;

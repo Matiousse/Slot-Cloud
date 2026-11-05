@@ -6,7 +6,7 @@ import { VideoTony } from './tony-video';
 import { EASE, tween, updateTweens } from './tween';
 import { MAX_TIPS, TIP_MULT } from '../../shared/game';
 
-export const FONT = 'Modak'; // police « ballon » (OFL)
+export const FONT = 'Titan One'; // police des titres et chiffres (OFL, choisie sur la référence de l'utilisateur)
 export const FONT2 = 'Lilita One';
 
 export function textStyle(size: number, fill: string | string[] = '#ffffff', stroke = 10): any {

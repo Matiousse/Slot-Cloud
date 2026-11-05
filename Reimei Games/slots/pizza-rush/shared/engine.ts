@@ -10,6 +10,7 @@ import {
   RUSH_CHANCE,
   RUSH_COUNTS,
   MAX_TIPS,
+  GOLDEN_SPINS,
   TIP_MULT,
   FULL_JAR_SPINS,
   PAYTABLE,
@@ -214,12 +215,15 @@ export class Engine {
   }
 
   /** Rush Hour: turn 1-4 random non-scatter, non-wild cells of reels 2-5 into Wilds. */
-  private rushHour(): [number, number][] | null {
+  private rushHour(force = false): [number, number][] | null {
     const rng = this.rng;
-    if (rng() >= RUSH_CHANCE) return null;
-    let r = rng() * RUSH_TOTAL;
-    let n = RUSH_COUNTS[RUSH_COUNTS.length - 1][0];
-    for (const [c, w] of RUSH_COUNTS) {
+    // force (GUARANTEED RUSH mode): always happens, with 2 to 4 Wilds (same relative weights)
+    if (!force && rng() >= RUSH_CHANCE) return null;
+    const counts = force ? RUSH_COUNTS.filter(([c]) => c >= 2) : RUSH_COUNTS;
+    const total = force ? counts.reduce((a, [, w]) => a + w, 0) : RUSH_TOTAL;
+    let r = rng() * total;
+    let n = counts[counts.length - 1][0];
+    for (const [c, w] of counts) {
       if (r < w) {
         n = c;
         break;
@@ -286,12 +290,12 @@ export class Engine {
     } as NewEvent);
   }
 
-  private playRound(scatterK: number, allowedMax: number): RoundResult {
+  private playRound(scatterK: number, allowedMax: number, forceRush = false, forceWild = false, spins?: number): RoundResult {
     this.drawBoard(BASE_SET, scatterK, allowedMax);
     this.wins.length = 0;
     // the board is recorded as landed; Rush Hour cells are listed separately
     const landed = this.events ? this.boardStrings() : null;
-    const rush = this.rushHour();
+    const rush = this.rushHour(forceRush);
     const win = this.evaluate(1);
     let total = Math.min(win, WINCAP);
     let capped = total >= WINCAP;
@@ -305,7 +309,7 @@ export class Engine {
     let tier: Tier | 0 = 0;
     if (!capped && sc >= 3) {
       tier = (sc >= 5 ? 3 : sc === 4 ? 2 : 1) as Tier;
-      total = this.freeSpins(tier, total);
+      total = this.freeSpins(tier, total, forceWild, spins);
       capped = total >= WINCAP;
     }
     if (capped) this.emit({ type: 'wincap', amount: WINCAP });
@@ -313,17 +317,23 @@ export class Engine {
     return { payout: total, tier, rush: rush?.length ?? 0 };
   }
 
-  private freeSpins(tier: Tier, startTotal: number): number {
+  /** forceWild (DINNER RUSH BONUS buy): every free spin shows at least one Golden Slice Wild (reels 2-5). */
+  private freeSpins(tier: Tier, startTotal: number, forceWild = false, spinsOverride?: number): number {
     const info = TIERS[tier];
     const set = FS_SETS[tier];
     let total = startTotal;
-    let spins = info.spins;
+    let spins = spinsOverride ?? info.spins;
     let tips = info.startTips;
     let jarAwarded = tips >= MAX_TIPS;
     this.emit({ type: 'freeSpinTrigger', tier, spins, tips });
 
     for (let spin = 1; spin <= spins; spin++) {
       this.drawBoard(set, -1);
+      if (forceWild && this.count(S.WD) === 0) {
+        const cells: number[] = [];
+        for (let i = ROWS; i < REELS * ROWS; i++) if (this.board[i] !== S.SC) cells.push(i);
+        this.board[cells[Math.floor(this.rng() * cells.length)]] = S.WD;
+      }
       this.wins.length = 0;
       tips = Math.min(MAX_TIPS, tips + this.count(S.WD));
       const mult = TIP_MULT[tips];
@@ -367,5 +377,15 @@ export class Engine {
 
   bonus(tier: Tier, record = false) {
     return this.run(() => this.playRound(TIERS[tier].scatters, REELS), record);
+  }
+
+  /** GUARANTEED RUSH: Rush Hour always happens (2-4 Wilds). No tier: a round without bonus; tier k: it triggers tier k. */
+  rush(record = false, tier?: Tier) {
+    return this.run(() => (tier ? this.playRound(TIERS[tier].scatters, REELS, true) : this.playRound(-1, 2, true)), record);
+  }
+
+  /** DINNER RUSH BONUS buy: the tier's free spins with a guaranteed Wild on every free spin. */
+  bonusWild(tier: Tier, record = false, spins = GOLDEN_SPINS) {
+    return this.run(() => this.playRound(TIERS[tier].scatters, REELS, false, true, spins), record);
   }
 }

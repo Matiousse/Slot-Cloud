@@ -5,7 +5,8 @@
   "maxWinX": 10000,
   "bonusOdds": {
     "base": 217.41247876781037,
-    "ante": 43.482495724221806
+    "boost": 72.47082624400308,
+    "superboost": 11.44276204413704
   },
   "tierSplit": {
     "1": 0.9569076559170006,
@@ -19,11 +20,23 @@
       "hitRate": 0.604977,
       "maxWinOdds": 4253158
     },
-    "ante": {
-      "cost": 3,
+    "boost": {
+      "cost": 2,
       "rtp": 0.967,
-      "hitRate": 0.612275,
-      "maxWinOdds": 850632
+      "hitRate": 0.608626,
+      "maxWinOdds": 1417719
+    },
+    "superboost": {
+      "cost": 10,
+      "rtp": 0.967,
+      "hitRate": 0.637821,
+      "maxWinOdds": 223850
+    },
+    "rush": {
+      "cost": 4,
+      "rtp": 0.967,
+      "hitRate": 0.86968,
+      "maxWinOdds": 4060835
     },
     "bonus": {
       "cost": 100,
@@ -32,10 +45,16 @@
       "maxWinOdds": 216439
     },
     "super": {
+      "cost": 200,
+      "rtp": 0.967,
+      "hitRate": 0.999103,
+      "maxWinOdds": 1003030
+    },
+    "mystery": {
       "cost": 300,
       "rtp": 0.967,
-      "hitRate": 0.999989,
-      "maxWinOdds": 296502
+      "hitRate": 0.841425,
+      "maxWinOdds": 81839
     }
   }
 }

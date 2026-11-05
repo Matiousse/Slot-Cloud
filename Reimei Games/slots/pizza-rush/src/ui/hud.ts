@@ -1,17 +1,18 @@
 // Interface (DOM, nette à toutes les tailles) : barre de commande, achat du bonus, règles, messages.
 // Mode « social casino » de Stake : les mots interdits (bet, buy, pay…) sont remplacés.
 import { money, fromMicro } from '../core/format';
-import { MODES, PAYTABLE, S, TARGET_RTP, WINCAP_X, TIERS, TIP_MULT, RUSH_COUNTS } from '../../shared/game';
+import { PAYTABLE, S, TARGET_RTP, WINCAP_X, TIERS, TIP_MULT, RUSH_COUNTS, GOLDEN_SPINS, modeByName } from '../../shared/game';
 
 const WORDS = {
-  normal: { bet: 'BET', buy: 'BUY BONUS', buyShort: 'BUY', pays: 'PAYS', paytable: 'PAYTABLE', cost: 'COST', ante: 'ANTE' },
-  social: { bet: 'SPIN', buy: 'PLAY BONUS', buyShort: 'PLAY', pays: 'AWARDS', paytable: 'AWARD TABLE', cost: 'PRICE', ante: 'BOOST' },
+  normal: { bet: 'BET', buy: 'BUY BONUS', buyShort: 'BUY', pays: 'PAYS', paytable: 'PAYTABLE', cost: 'COST', amount: 'BET AMOUNT', getBonus: 'GET BONUS', funds: 'NOT ENOUGH BALANCE' },
+  social: { bet: 'SPIN', buy: 'PLAY BONUS', buyShort: 'PLAY', pays: 'AWARDS', paytable: 'AWARD TABLE', cost: 'PRICE', amount: 'PLAY AMOUNT', getBonus: 'GET BONUS', funds: 'NOT ENOUGH BALANCE' },
 };
 
 export interface HudEvents {
   spin(): void;
   bet(dir: -1 | 1): void;
-  ante(on: boolean): void;
+  /** mode qui reste actif à chaque spin (boost, rush, mystery), null = jeu normal */
+  feature(mode: string | null): void;
   buy(mode: string): void;
   turbo(on: boolean): void;
   auto(n: number): void;
@@ -19,6 +20,16 @@ export interface HudEvents {
 }
 
 const AUTO_STEPS = [0, 10, 25, 50, 100];
+
+// Les 6 vignettes de l'écran bonus (même disposition que la référence de l'utilisateur).
+const CARDS: { mode: string; title: string; icon: string; text: () => string }[] = [
+  { mode: 'boost', title: 'TIP BOOST', icon: 'H1', text: () => `Free spins trigger ${modeByName('boost').boost}× as often. Stays on until you switch it off.` },
+  { mode: 'superboost', title: 'ORDER BOOST', icon: 'SC', text: () => `Free spins trigger ${modeByName('superboost').boost}× as often. Stays on until you switch it off.` },
+  { mode: 'rush', title: 'GUARANTEED RUSH', icon: 'WD', text: () => 'Every spin Tony drops 2 to 4 GOLDEN SLICE WILDS. Stays on until you switch it off.' },
+  { mode: 'bonus', title: 'LUNCH RUSH BONUS', icon: 'H4', text: () => `${TIERS[1].spins} free spins · TIP JAR from ×1, never resets · every Wild adds a tip.` },
+  { mode: 'super', title: 'DINNER RUSH BONUS', icon: 'H3', text: () => `${GOLDEN_SPINS} free spins · TIP JAR from ×${TIP_MULT[TIERS[2].startTips]} · a guaranteed GOLDEN SLICE WILD every spin.` },
+  { mode: 'mystery', title: 'MYSTERY ORDER', icon: 'H2', text: () => 'Every spin the phone rings: NO ORDER, DINNER RUSH or MIDNIGHT RUSH free spins. Stays on until you switch it off.' },
+];
 
 // Icônes (traits épais arrondis, style cartoon) et emblème du studio Reimei Games (soleil levant 黎明).
 const sv = (d: string) => `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
@@ -55,7 +66,8 @@ export class Hud {
   private w = WORDS.normal;
   private el: HTMLElement;
   private q = <T extends HTMLElement = HTMLElement>(s: string) => this.el.querySelector(s) as T;
-  private anteOn = false;
+  private feature: string | null = null;
+  private balance = 0;
   private turboOn = false;
   private soundOn = (() => { try { return localStorage.getItem('pizza-rush-sound') !== 'off'; } catch { return true; } })();
   private autoIdx = 0;
@@ -88,7 +100,7 @@ export class Hud {
         <div class="toprow">
           <button class="glass mini" data-a="sound" title="Sound">${FR.sq}${ICON.sound}</button>
           <button class="glass mini" data-a="info" title="Rules">${FR.sq}${ICON.info}</button>
-          <button class="glass ante" data-a="ante">${FR.sq}<i></i><span>${w.ante}<small>×5 BONUS</small></span></button>
+          <button class="glass ante feat" data-a="feat">${FR.sq}<i></i><span data-v="featName">FEATURES<small>OFF</small></span></button>
         </div>
         <button class="glass big buy" data-a="buy">${FR.left}${REIMEI}<b>${w.buy}</b></button>
         <div class="val bal"><span>BALANCE</span><b data-v="balance">–</b></div>
@@ -108,41 +120,64 @@ export class Hud {
           <button class="glass big spin" data-a="spin" aria-label="Spin">${FR.right}${ICON.spin}</button>
         </div>
       </div>
-      <div class="modal" data-m="buy"><div class="card">
-        <h2>${w.buy}</h2>
-        <div class="offers">
-          ${MODES.filter((m) => m.kind === 'buy')
-            .map((m) => {
-              const t = TIERS[m.tier!];
-              const mult = TIP_MULT[t.startTips];
-              return `<button class="offer" data-buy="${m.name}">
-                <h3>${t.key === 'lunchRush' ? 'LUNCH RUSH' : 'DINNER RUSH'}</h3>
-                <p>${t.spins} FREE SPINS</p><p>${t.startTips ? `starts at <b>x${mult}</b>` : 'tip jar from <b>x1</b>'}</p>
-                <div class="price">${w.cost} <b data-price="${m.cost}">${m.cost}x</b></div></button>`;
-            })
-            .join('')}
+      <div class="modal features" data-m="buy"><div class="fscreen">
+        <div class="famount"><span>${w.amount}</span>
+          <div class="frow"><button class="fround" data-a="minus" aria-label="−">−</button><b data-v="famount">–</b><button class="fround" data-a="plus" aria-label="+">+</button></div>
         </div>
-        <button class="close" data-a="close">✕</button>
-      </div></div>
-      <div class="modal" data-m="confirm"><div class="card small">
-        <h2 data-v="confirmTitle"></h2><p data-v="confirmText"></p>
-        <div class="row"><button class="pill" data-a="close">CANCEL</button><button class="pill buy" data-a="confirm">CONFIRM</button></div>
+        <div class="fcards">
+          ${CARDS.map((c) => {
+            const m = modeByName(c.mode);
+            return `<div class="fcard" data-card="${c.mode}">
+              <h4>${c.title}</h4><p>${c.text()}</p>
+              <img src="anims/${c.icon}/corps.webp" alt="">
+              <div class="every">${m.cost}× ${m.persistent ? 'every spin' : ''}</div>
+              <div class="fprice" data-price="${m.cost}">–</div>
+              <button class="fbtn" data-feat="${c.mode}">${m.persistent ? 'ACTIVATE' : w.getBonus}</button>
+              <div class="nb">${w.funds}</div>
+            </div>`;
+          }).join('')}
+        </div>
+        <button class="close fclose" data-a="close">✕</button>
       </div></div>
       <div class="modal" data-m="info"><div class="card rules">${this.rulesHtml()}<button class="close" data-a="close">✕</button></div></div>
       <div class="toast" data-v="toast"></div>`;
     this.el.querySelectorAll<HTMLButtonElement>('[data-a]').forEach((b) => b.addEventListener('click', (e) => this.click(b.dataset.a!, e)));
-    this.el.querySelectorAll<HTMLButtonElement>('[data-buy]').forEach((b) => b.addEventListener('click', () => this.askBuy(b.dataset.buy!)));
+    this.el.querySelectorAll<HTMLButtonElement>('[data-feat]').forEach((b) =>
+      b.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.pickFeature(b.dataset.feat!);
+      }),
+    );
     this.refreshToggles();
     this.setBet(this.bet);
   }
 
-  private pendingBuy = '';
-  private askBuy(mode: string) {
-    const m = MODES.find((x) => x.name === mode)!;
-    this.pendingBuy = mode;
-    this.q('[data-v="confirmTitle"]').textContent = `${this.w.buyShort} ${TIERS[m.tier!].key === 'lunchRush' ? 'LUNCH RUSH' : 'DINNER RUSH'}?`;
-    this.q('[data-v="confirmText"]').textContent = `${this.w.cost}: ${money(fromMicro(this.bet * m.cost))}`;
-    this.open('confirm');
+  /** Vignette choisie : un achat part tout de suite ; un mode permanent s'active (ou se coupe s'il était actif). */
+  private pickFeature(mode: string) {
+    const m = modeByName(mode);
+    if (Math.round(this.bet * m.cost) > this.balance && this.feature !== mode) return;
+    this.closeAll();
+    if (!m.persistent) return this.ev.buy(mode);
+    this.setFeature(this.feature === mode ? null : mode);
+    this.ev.feature(this.feature);
+  }
+
+  private refreshCards() {
+    const amount = this.q('[data-v="famount"]');
+    if (amount) amount.textContent = money(fromMicro(this.bet));
+    this.el.querySelectorAll<HTMLElement>('.fcard').forEach((card) => {
+      const mode = card.dataset.card!;
+      const m = modeByName(mode);
+      const price = Math.round(this.bet * m.cost);
+      const on = this.feature === mode;
+      const broke = price > this.balance && !on;
+      card.querySelector('.fprice')!.textContent = money(fromMicro(price));
+      card.classList.toggle('on', on);
+      card.classList.toggle('broke', broke);
+      const btn = card.querySelector<HTMLButtonElement>('.fbtn')!;
+      btn.textContent = on ? 'SWITCH OFF' : m.persistent ? 'ACTIVATE' : this.w.getBonus;
+      btn.disabled = broke;
+    });
   }
 
   private click(a: string, e: Event) {
@@ -154,13 +189,17 @@ export class Hud {
         return this.ev.bet(-1);
       case 'plus':
         return this.ev.bet(1);
-      case 'ante':
-        this.anteOn = !this.anteOn;
-        this.refreshToggles();
-        return this.ev.ante(this.anteOn);
+      case 'feat':
+        if (this.feature) {
+          this.setFeature(null);
+          return this.ev.feature(null);
+        }
+        if (!this.canBuy) return;
+        this.refreshCards();
+        return this.open('buy');
       case 'buy':
         if (!this.canBuy) return;
-        this.el.querySelectorAll<HTMLElement>('[data-price]').forEach((p) => (p.textContent = money(fromMicro(this.bet * Number(p.dataset.price)))));
+        this.refreshCards();
         return this.open('buy');
       case 'turbo':
         this.turboOn = !this.turboOn;
@@ -178,9 +217,6 @@ export class Hud {
         return this.open('info');
       case 'close':
         return this.closeAll();
-      case 'confirm':
-        this.closeAll();
-        return this.ev.buy(this.pendingBuy);
     }
   }
 
@@ -193,10 +229,12 @@ export class Hud {
   }
 
   private refreshToggles() {
-    this.q('[data-a="ante"]').classList.toggle('on', this.anteOn);
+    this.q('[data-a="feat"]').classList.toggle('on', !!this.feature);
+    const card = CARDS.find((c) => c.mode === this.feature);
+    this.q('[data-v="featName"]').innerHTML = card ? `${card.title}<small>ON · TAP TO STOP</small>` : 'FEATURES<small>OFF</small>';
     this.q('[data-a="turbo"]').classList.toggle('on', this.turboOn);
     this.q('[data-a="sound"]').classList.toggle('off', !this.soundOn);
-    this.q('[data-a="buy"]').classList.toggle('disabled', this.anteOn || !this.canBuy);
+    this.q('[data-a="buy"]').classList.toggle('disabled', !this.canBuy);
   }
 
   setAuto(n: number) {
@@ -207,18 +245,22 @@ export class Hud {
   }
 
   setBalance(micro: number) {
+    this.balance = micro;
     this.q('[data-v="balance"]').textContent = money(fromMicro(micro));
+    this.refreshCards();
   }
   setWin(micro: number | null) {
     this.q('[data-v="win"]').textContent = micro ? money(fromMicro(micro)) : '';
   }
   setBet(micro: number) {
     this.bet = micro;
-    const shown = this.anteOn ? micro * 3 : micro;
+    // avec un mode permanent, chaque spin coûte la mise × le coût du mode : c'est ce qu'on affiche
+    const shown = this.feature ? Math.round(micro * modeByName(this.feature).cost) : micro;
     this.q('[data-v="bet"]').textContent = money(fromMicro(shown));
+    this.refreshCards();
   }
-  setAnte(on: boolean) {
-    this.anteOn = on;
+  setFeature(mode: string | null) {
+    this.feature = mode;
     this.refreshToggles();
     this.setBet(this.bet);
   }
@@ -265,10 +307,12 @@ export class Hud {
       <h3><img src="anims/SC/corps.webp" alt=""> FREE SPINS</h3>
       <p>3, 4 or 5 Phone Order scatters award <b>LUNCH RUSH</b> (${TIERS[1].spins} free spins), <b>DINNER RUSH</b> (${TIERS[2].spins} free spins, tip jar starts with ${TIERS[2].startTips} tips) or <b>MIDNIGHT RUSH</b> (${TIERS[3].spins} free spins, starts with ${TIERS[3].startTips} tips).</p>
       <p><b>TIP JAR</b>: every Wild that lands during free spins drops a tip in the jar. Each tip raises the win multiplier: ${TIP_MULT.map((m) => `x${m}`).join(' → ')}. The multiplier never resets during the feature. Filling the jar (9 tips) awards +5 free spins once. 3 or more scatters during free spins award +5 free spins.</p>
-      <h3>${w.ante}</h3>
-      <p>${w.ante} costs 3x the ${w.bet.toLowerCase()} and makes the free spins 5 times more likely. RTP ${(TARGET_RTP * 100).toFixed(2)}%.</p>
       <h3>${w.buy}</h3>
-      <p>LUNCH RUSH: 100x the ${w.bet.toLowerCase()}. DINNER RUSH: 300x the ${w.bet.toLowerCase()}. RTP ${(TARGET_RTP * 100).toFixed(2)}%.</p>
+      ${CARDS.map((c) => {
+        const m = modeByName(c.mode);
+        return `<p><b>${c.title}</b> (${m.cost}x the ${w.bet.toLowerCase()}${m.persistent ? ' on every spin' : ''}): ${c.text()}</p>`;
+      }).join('')}
+      <p>Every feature has an RTP of ${(TARGET_RTP * 100).toFixed(2)}%.</p>
       <h3>GENERAL</h3>
       <p>The maximum win is ${WINCAP_X.toLocaleString('en-US')}x the ${w.bet.toLowerCase()}; the round ends when it is reached. Malfunction voids all ${w.pays.toLowerCase()} and plays. Press the space bar to spin.</p>`;
   }

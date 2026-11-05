@@ -16,7 +16,8 @@ const q = (k: string) => params.get(k) ?? '';
 
 async function loadFonts() {
   const faces = [
-    new FontFace('Modak', 'url(fonts/modak-latin-400-normal.woff2)'),
+    new FontFace('Titan One', 'url(fonts/titan-one-latin-400-normal.woff2)'),
+    new FontFace('Fredoka', 'url(fonts/fredoka-latin-600-normal.woff2)', { weight: '600' }),
     new FontFace('Luckiest Guy', 'url(fonts/luckiest-guy-latin-400-normal.woff2)'),
     new FontFace('Lilita One', 'url(fonts/lilita-one-latin-400-normal.woff2)'),
   ];
@@ -71,7 +72,7 @@ async function boot() {
   const hud = new Hud(document.getElementById('hud')!, {
     spin: () => game.spin(),
     bet: (d) => game.changeBet(d),
-    ante: (on) => game.setAnte(on),
+    feature: (m) => game.setFeature(m),
     buy: (m) => game.buy(m),
     turbo: (on) => game.setTurbo(on),
     auto: (n) => game.setAuto(n),

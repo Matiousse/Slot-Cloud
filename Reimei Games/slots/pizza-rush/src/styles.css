@@ -7,7 +7,7 @@
 html, body { margin: 0; height: 100%; background: #120b10; overflow: hidden; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
 #stage, #stage canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
 body { font-family: 'Lilita One', system-ui, sans-serif; color: var(--cream); }
-h2, h3, .offer .price, table.pay td, table.pay th, #splash .cta, #splash .sc h3, .toast, .max { font-family: 'Modak', 'Luckiest Guy', sans-serif !important; font-weight: 400; letter-spacing: .03em; }
+h2, h3, .offer .price, table.pay td, table.pay th, #splash .cta, #splash .sc h3, .toast, .max { font-family: 'Titan One', 'Luckiest Guy', sans-serif !important; font-weight: 400; letter-spacing: .03em; }
 
 /* ---------------------------------------------------------------- commandes : panneaux « verre » biseautés
    (fond sombre translucide, liseré blanc fin, bords en biais), police ballon Modak. Tout est mesuré en --u. */
@@ -30,7 +30,7 @@ h2, h3, .offer .price, table.pay td, table.pay th, #splash .cta, #splash .sc h3,
 .tools > * { pointer-events: auto; }
 
 button {
-  font-family: 'Modak', 'Luckiest Guy', system-ui, sans-serif; font-weight: 400; color: #fff; cursor: pointer; padding: 0; line-height: 1;
+  font-family: 'Titan One', 'Luckiest Guy', system-ui, sans-serif; font-weight: 400; color: #fff; cursor: pointer; padding: 0; line-height: 1;
   border: 0; background: none; transition: transform .08s, filter .15s;
 }
 .glass { position: relative; display: grid; place-items: center; color: #f4eef2; }
@@ -55,7 +55,7 @@ button.glass:active { transform: scale(.95); }
 .big { width: calc(var(--u) * 14); height: calc(var(--u) * 12); }
 .big.buy { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(var(--u) * .1); padding-right: calc(var(--u) * 1); }
 .big.buy .reimei { width: 66%; }
-.big.buy .rm-t { font-family: 'Modak', sans-serif; font-size: 22px; fill: #fff3d6; stroke: #1b0f14; stroke-width: 3; paint-order: stroke; letter-spacing: 1px; }
+.big.buy .rm-t { font-family: 'Titan One', sans-serif; font-size: 22px; fill: #fff3d6; stroke: #1b0f14; stroke-width: 3; paint-order: stroke; letter-spacing: 1px; }
 .big.buy b, .ante span, .val b, .winbox b { font-weight: 400; }
 .big.buy b { font-size: calc(var(--u) * 2); letter-spacing: .03em; }
 .big.spin { width: calc(var(--u) * 15); height: calc(var(--u) * 13); padding-left: calc(var(--u) * 1); }
@@ -106,8 +106,8 @@ button.glass:active { transform: scale(.95); }
   background: linear-gradient(#3a2416, #22130b); border: 6px solid var(--wood2); border-radius: 28px; box-shadow: 0 20px 60px #000c;
 }
 .card.small { width: min(90vw, 460px); text-align: center; }
-.card h2 { font-family: 'Modak'; font-weight: 400; font-size: 40px; margin: 0 0 14px; text-align: center; color: var(--gold); text-shadow: 0 3px 0 var(--ink); }
-.card h3 { font-family: 'Modak'; font-weight: 400; color: #ffd27a; margin: 20px 0 6px; display: flex; align-items: center; gap: 8px; }
+.card h2 { font-family: 'Titan One'; font-weight: 400; font-size: 40px; margin: 0 0 14px; text-align: center; color: var(--gold); text-shadow: 0 3px 0 var(--ink); }
+.card h3 { font-family: 'Titan One'; font-weight: 400; color: #ffd27a; margin: 20px 0 6px; display: flex; align-items: center; gap: 8px; }
 .card h3 img { width: 44px; }
 .card p { line-height: 1.4; margin: 6px 0; color: #f6e6cc; }
 .card .row { display: flex; gap: 14px; justify-content: center; margin-top: 18px; }
@@ -119,10 +119,10 @@ button.glass:active { transform: scale(.95); }
 .offer { width: 300px; padding: 20px 16px; border-radius: 22px; text-align: center; background: linear-gradient(#ff6a4d, var(--red2)); font-family: 'Lilita One'; }
 .offer h3 { justify-content: center; font-size: 30px; color: #fff; margin: 0 0 8px; }
 .offer p { color: #fff; margin: 4px 0; font-size: 18px; }
-.offer .price { margin-top: 12px; font-family: 'Modak'; font-size: 26px; background: #0004; border-radius: 14px; padding: 8px; }
+.offer .price { margin-top: 12px; font-family: 'Titan One'; font-size: 26px; background: #0004; border-radius: 14px; padding: 8px; }
 .rules .lead { text-align: center; }
 table.pay { width: 100%; border-collapse: collapse; }
-table.pay td, table.pay th { padding: 4px 8px; text-align: center; font-family: 'Modak'; font-weight: 400; }
+table.pay td, table.pay th { padding: 4px 8px; text-align: center; font-family: 'Titan One'; font-weight: 400; }
 table.pay td:nth-child(2) { text-align: left; font-family: 'Lilita One'; }
 table.pay img { width: 54px; display: block; }
 table.pay tr:nth-child(even) { background: #ffffff0d; }
@@ -141,7 +141,7 @@ table.pay tr:nth-child(even) { background: #ffffff0d; }
 #splash .cards { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
 #splash .sc { width: 220px; background: #00000059; border: 3px solid var(--wood2); border-radius: 20px; padding: 12px; }
 #splash .sc img { width: 92px; }
-#splash .sc h3 { font-family: 'Modak'; font-weight: 400; color: var(--gold); margin: 6px 0 4px; font-size: 22px; }
+#splash .sc h3 { font-family: 'Titan One'; font-weight: 400; color: var(--gold); margin: 6px 0 4px; font-size: 22px; }
 #splash .sc p { margin: 0; font-size: 15px; color: #f2dcc0; }
 #splash .max { color: #e7b98a; letter-spacing: .08em; }
 #splash .cta { font-size: 34px; padding: 14px 64px; border-radius: 40px; background: linear-gradient(#ff6a4d, var(--red2)); }
@@ -173,3 +173,46 @@ table.pay tr:nth-child(even) { background: #ffffff0d; }
   #splash .cta { font-size: 6vw; padding: 2vh 12vw; }
 }
 body.no-turbo [data-a="turbo"], body.no-auto [data-a="auto"], body.no-buy [data-a="buy"] { display: none; }
+
+/* ---------------------------------------------------------------- écran des 6 features (vignettes, comme la référence) */
+.modal.features { background: radial-gradient(ellipse at 50% 40%, #1d1430e6, #0b0710f2); backdrop-filter: blur(3px); align-items: stretch; }
+.fscreen { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: calc(var(--u) * 1.6); padding: calc(var(--u) * 1.5) calc(var(--u) * 2.5) calc(var(--u) * 4); }
+.famount { display: flex; flex-direction: column; align-items: center; gap: calc(var(--u) * .8); }
+.famount span { font: 600 calc(var(--u) * 1.5) 'Fredoka', system-ui, sans-serif; letter-spacing: .22em; color: #fff; }
+.frow { display: flex; align-items: center; gap: calc(var(--u) * 3); }
+.frow b { font: 400 calc(var(--u) * 3) 'Titan One', sans-serif; color: #fff; min-width: calc(var(--u) * 12); text-align: center; text-shadow: 0 calc(var(--u) * .25) 0 #000; }
+.fround { width: calc(var(--u) * 6.4); height: calc(var(--u) * 4.2); border-radius: 99px; border: calc(var(--u) * .3) solid #fff; background: #0006;
+  font: 400 calc(var(--u) * 3) 'Titan One', sans-serif; color: #fff; display: grid; place-items: center; }
+.fcards { display: flex; gap: calc(var(--u) * 1.3); align-items: stretch; justify-content: center; }
+.fcard { position: relative; width: calc(var(--u) * 15.2); border-radius: calc(var(--u) * 2.2);
+  background: linear-gradient(#17121fee, #0e0a14f2); border: 1.5px solid #ffffff2e; box-shadow: inset 0 0 0 1px #00000080, 0 calc(var(--u) * 1) calc(var(--u) * 3) #000a;
+  display: flex; flex-direction: column; align-items: center; padding: calc(var(--u) * 1.8) calc(var(--u) * 1.1) calc(var(--u) * 1.4); text-align: center; }
+.fcard h4 { margin: 0; min-height: calc(var(--u) * 4.8); display: grid; place-items: center; font: 400 calc(var(--u) * 1.8) 'Titan One', sans-serif;
+  line-height: 1.1; color: #fff; letter-spacing: .01em; text-shadow: 0 calc(var(--u) * .2) 0 #000; }
+.fcard p { margin: calc(var(--u) * .8) 0 0; font: 600 calc(var(--u) * 1.3) 'Fredoka', system-ui, sans-serif; line-height: 1.32; color: #f1ecf6; flex: 1; }
+.fcard img { width: calc(var(--u) * 9); height: calc(var(--u) * 9); object-fit: contain; margin: calc(var(--u) * .4) 0; filter: drop-shadow(0 calc(var(--u) * .6) calc(var(--u) * .8) #000c); }
+.fcard .every { font: italic 600 calc(var(--u) * 1.5) 'Fredoka', system-ui, sans-serif; letter-spacing: .05em; color: #d8d2df; min-height: 1.3em; }
+.fcard .fprice { font: 400 calc(var(--u) * 2.5) 'Titan One', sans-serif; white-space: nowrap; margin: calc(var(--u) * .4) 0 calc(var(--u) * 1);
+  background: linear-gradient(#ffffff, #e4dbe9); -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 calc(var(--u) * .25) 0 #000); }
+.fbtn { width: 100%; height: calc(var(--u) * 4.4); border-radius: 99px; border: calc(var(--u) * .28) solid #fff; background: #0008; white-space: nowrap;
+  font: 400 calc(var(--u) * 1.75) 'Titan One', sans-serif; color: #fff; letter-spacing: .02em; }
+.fbtn:hover { background: #ffffff1a; }
+.fcard .nb { position: absolute; bottom: calc(var(--u) * -2.6); left: -10%; right: -10%; white-space: nowrap; font: 600 calc(var(--u) * 1.1) 'Fredoka', system-ui, sans-serif;
+  letter-spacing: .1em; color: #f2d36b; opacity: 0; }
+.fcard.broke .nb { opacity: 1; }
+.fcard.broke .fbtn { opacity: .45; pointer-events: none; }
+.fcard.on { border-color: #ffd34a; box-shadow: 0 0 0 calc(var(--u) * .25) #ffd34a66, 0 calc(var(--u) * 1) calc(var(--u) * 3) #000a; }
+.fcard.on .fbtn { background: linear-gradient(#ffd95e, #f0a81c); color: #1b0f14; border-color: #ffe9a6; }
+.fclose { position: absolute; top: calc(var(--u) * 1.6); right: calc(var(--u) * 1.6); width: calc(var(--u) * 5.2); height: calc(var(--u) * 5.2);
+  border-radius: calc(var(--u) * 1.4); border: calc(var(--u) * .3) solid #fff; background: #0008; font: 400 calc(var(--u) * 2.4) 'Titan One'; transform: none; }
+.ante.feat span { max-width: calc(var(--u) * 9); }
+@media (orientation: portrait) {
+  .fscreen { justify-content: flex-start; overflow-y: auto; padding-top: calc(var(--u) * 7); }
+  .fcards { flex-wrap: wrap; gap: calc(var(--u) * 2) calc(var(--u) * 1.6); padding-bottom: calc(var(--u) * 6); }
+  .fcard { width: calc(var(--u) * 26); min-height: 0; }
+  .fcard h4 { font-size: calc(var(--u) * 2.6); min-height: calc(var(--u) * 6); }
+  .fcard p { font-size: calc(var(--u) * 1.8); }
+  .fcard img { width: calc(var(--u) * 13); height: calc(var(--u) * 13); }
+}

@@ -57,10 +57,16 @@ export class DemoBackend implements Backend {
     else if (f === 'rush' || f === 'big') {
       do res = this.eng.noBonus(true);
       while (f === 'rush' ? res.rush === 0 : res.payout < 2000);
-    } else if (mode.kind === 'buy') res = this.eng.bonus(mode.tier!, true);
-    else if (mode.kind === 'ante') {
+    } else if (mode.kind === 'buy') res = mode.golden ? this.eng.bonusWild(mode.tier!, true) : this.eng.bonus(mode.tier!, true);
+    else if (mode.kind === 'boost') {
       const boosted = NATURAL.pTrigger * (mode.boost ?? 1);
       res = this.rng() < boosted ? this.eng.bonus(this.pickTier(), true) : this.eng.noBonus(true);
+    } else if (mode.kind === 'rush') {
+      res = this.rng() < NATURAL.pTrigger ? this.eng.rush(true, this.pickTier()) : this.eng.rush(true);
+    } else if (mode.kind === 'mystery') {
+      // démo : parts proches des maths publiées (MIDNIGHT 15 %, DINNER ~45 %, sinon pas de commande)
+      const r = this.rng();
+      res = r < (mode.midnight ?? 0.15) ? this.eng.bonus(3, true) : r < (mode.midnight ?? 0.15) + 0.447 ? this.eng.bonus(2, true) : this.eng.noBonus(true);
     } else res = this.eng.natural(true);
     this.pending = Math.round((amount * res.payout) / 100);
     await new Promise((r) => setTimeout(r, 80));

@@ -4,13 +4,17 @@ import { parentPort } from 'node:worker_threads';
 import { Engine, makeRng, type RoundResult } from '../shared/engine';
 import type { Tier } from '../shared/game';
 
-export type PoolKind = 'nb' | Tier;
+export type PoolKind = 'nb' | Tier | 'rush' | 'r1' | 'r2' | 'r3' | 'w2';
 
 const eng = new Engine(makeRng(1));
 
 export function runSim(pool: PoolKind, seed: number, i: number, record: boolean): RoundResult {
   eng.setRng(makeRng(seed, i));
-  return pool === 'nb' ? eng.noBonus(record) : eng.bonus(pool, record);
+  if (pool === 'nb') return eng.noBonus(record);
+  if (pool === 'rush') return eng.rush(record);
+  if (pool === 'r1' || pool === 'r2' || pool === 'r3') return eng.rush(record, Number(pool[1]) as Tier);
+  if (pool === 'w2') return eng.bonusWild(2, record);
+  return eng.bonus(pool, record);
 }
 
 parentPort?.on('message', (msg) => {

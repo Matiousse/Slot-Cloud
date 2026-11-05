@@ -15,7 +15,8 @@ export class Game {
   private betIdx = 0;
   private balance = 0;
   private currency = 'EUR';
-  private ante = false;
+  /** mode qui reste actif à chaque spin (boost, superboost, rush, mystery) ; null = jeu normal */
+  private feature: string | null = null;
   private turbo = false;
   private autoLeft = 0;
   private busy = false;
@@ -62,10 +63,11 @@ export class Game {
     audio.play('click');
     this.hud.setBet(this.bet);
   }
-  setAnte(on: boolean) {
-    this.ante = on;
+  setFeature(mode: string | null) {
+    if (this.busy) return;
+    this.feature = mode;
     audio.play('click');
-    this.hud.setAnte(on);
+    this.hud.setFeature(mode);
   }
   setTurbo(on: boolean) {
     this.turbo = on;
@@ -98,7 +100,7 @@ export class Game {
       this.skip();
       return;
     }
-    await this.start(this.ante ? 'ante' : 'base');
+    await this.start(this.feature ?? 'base');
   }
 
   async buy(mode: string) {
@@ -162,6 +164,13 @@ export class Game {
     let tips = 0;
     let fsTotal = 0;
     const events = round.state as BookEvent[];
+    // MYSTERY ORDER : le téléphone sonne avant le spin et annonce la commande
+    if (modeByName(round.mode).kind === 'mystery') {
+      const trig = events.find((e) => e.type === 'freeSpinTrigger') as { tier: Tier } | undefined;
+      audio.play('scatter', { i: 2 });
+      await this.banner(['MYSTERY ORDER', trig ? `${TIER_NAME[trig.tier]}!` : 'NO ORDER'], trig ? 1300 : 900, true);
+      if (trig) this.stage.tony.play('bonus', { then: 'idle' });
+    }
     for (let i = 0; i < events.length; i++) {
       const ev = events[i];
       const next = events[i + 1];
