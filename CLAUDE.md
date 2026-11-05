@@ -9,9 +9,9 @@
 - Tony (perso Pizza Rush) : la tête ne change jamais, seuls les traits du visage sont permutés ; les bras ne bougent
   JAMAIS (ils sont dans le corps) ; casquette d'origine (pas de casquette reconstruite).
 - Interface Pizza Rush : pas de barre en bas ; commandes en panneaux « verre fumé » biseautés (liseré blanc fin, bords en
-  biais, comme la référence donnée par l'utilisateur) : achat bonus avec le logo Reimei Games sous le logo du jeu, spin en bas
+  biais, comme la référence donnée par l'utilisateur) : achat bonus avec le logo Reimei Games en bas à gauche AU MÊME NIVEAU que le spin en bas
   à droite (+/− et turbo/auto autour), police « ballon » Modak (OFL) partout. Polices : toujours sous licence libre (OFL).
-  Décor : intérieur de la pizzeria avec vitrines, fond VIDÉO en boucle (passants), Tony debout sur un tabouret en bas à gauche.
+  Décor : intérieur de la pizzeria avec vitrines, fond VIDÉO en boucle (passants), Tony debout sur un tabouret entre la colonne de gauche et le cadre.
 - Tony est joué par des VIDÉOS Google Flow (repos + 7 réactions : gain, grosgain, presque, perte, bonus, rush, suspense ; voir `anims/LISEZMOI.md`, outil `atelier/pizza-rush/tony_videos.py`). Ancienne note : vidéo de respiration détourée en planches de sprites
   (`atelier/pizza-rush/tony_video.py`, 12 i/s, boucle aller-retour). Le rig Rig Lab de Tony reste dans le code (désactivé).
 - « Lancer en local » = l'utilisateur ne voit pas le localhost du conteneur : construire et publier en artifact.
