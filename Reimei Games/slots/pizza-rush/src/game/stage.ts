@@ -241,13 +241,14 @@ async function loadBackground(): Promise<any> {
     v.setAttribute('playsinline', '');
     v.preload = 'auto';
     const webm = v.canPlayType('video/webm; codecs="vp9"');
-    v.src = webm ? 'img/fond.webm' : 'img/fond.mp4';
+    const film = new URLSearchParams(location.search).get('film') === '1';
+    // tournage : version « toutes images clés » (déplacements instantanés), fabriquée à part, jamais publiée
+    v.src = film ? 'img/fond-film.webm' : webm ? 'img/fond.webm' : 'img/fond.mp4';
     await new Promise<void>((ok, ko) => {
       v.addEventListener('loadeddata', () => ok(), { once: true });
       v.addEventListener('error', () => ko(new Error('vidéo du fond')), { once: true });
       setTimeout(() => ko(new Error('vidéo du fond : délai')), 15000);
     });
-    const film = new URLSearchParams(location.search).get('film') === '1';
     const source = new PIXI.VideoSource({ resource: v, autoPlay: !film, loop: true, muted: true, playsinline: true });
     const tex = new PIXI.Texture({ source });
     if (film) {

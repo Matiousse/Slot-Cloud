@@ -29,6 +29,15 @@ const ICON = {
   auto: sv('<path d="M38 24a14 14 0 1 1-4-9.9"/><path d="M36 6v9h-9"/><path d="M21 18l9 6-9 6z" fill="currentColor" stroke-width="2"/>'),
   spin: `<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><path d="M50 26A19 19 0 0 0 15 20"/><path d="M14 38a19 19 0 0 0 35 6"/><path d="M52 12v14H38" /><path d="M12 52V38h14"/></svg>`,
 };
+// Cadres « verre » biseautés : un polygone SVG étiré sur le bouton, trait fin blanc qui garde son épaisseur.
+const poly = (pts: string) =>
+  `<svg class="fr" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polygon points="${pts}" vector-effect="non-scaling-stroke"/><polygon class="in" points="${pts}" vector-effect="non-scaling-stroke"/></svg>`;
+const FR = {
+  left: poly('2,2 98,9 90,98 2,98'), // gros panneau de gauche : bord droit en biais
+  right: poly('2,9 98,2 98,98 10,98'), // gros panneau de droite : bord gauche en biais
+  sq: poly('7,3 97,8 93,97 3,92'), // petits boutons : losange léger
+  pill: poly('4,6 98,2 96,94 2,98'),
+};
 const REIMEI = `<svg class="reimei" viewBox="0 0 120 92" aria-label="Reimei Games">
   <defs><linearGradient id="rmSun" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd65a"/><stop offset=".55" stop-color="#ff7a2a"/><stop offset="1" stop-color="#e2302a"/></linearGradient>
   <clipPath id="rmCut"><rect x="0" y="0" width="120" height="50"/></clipPath></defs>
@@ -75,28 +84,28 @@ export class Hud {
   private render() {
     const w = this.w;
     this.el.innerHTML = `
-      <div class="side left">
-        <div class="minis">
-          <button class="mini" data-a="sound" title="Sound">${ICON.sound}</button>
-          <button class="mini" data-a="info" title="Rules">${ICON.info}</button>
+      <div class="corner left">
+        <div class="toprow">
+          <button class="glass mini" data-a="sound" title="Sound">${FR.sq}${ICON.sound}</button>
+          <button class="glass mini" data-a="info" title="Rules">${FR.sq}${ICON.info}</button>
+          <button class="glass ante" data-a="ante">${FR.sq}<i></i><span>${w.ante}<small>×5 BONUS</small></span></button>
         </div>
-        <div class="stack">
-          <button class="ante" data-a="ante"><i></i><span>${w.ante}<small>×5 BONUS</small></span></button>
-          <button class="big buy" data-a="buy">${REIMEI}<b>${w.buy}</b></button>
-          <div class="val"><span>BALANCE</span><b data-v="balance">–</b></div>
-        </div>
+        <button class="glass big buy" data-a="buy">${FR.left}${REIMEI}<b>${w.buy}</b></button>
+        <div class="val bal"><span>BALANCE</span><b data-v="balance">–</b></div>
       </div>
-      <div class="winbox"><span>WIN</span><b data-v="win"></b></div>
-      <div class="side right">
-        <div class="stack">
-          <button class="big spin" data-a="spin" aria-label="Spin">${ICON.spin}</button>
-          <div class="val"><span>${w.bet}</span>
-            <div class="betctl"><button data-a="minus">−</button><b data-v="bet">–</b><button data-a="plus">+</button></div>
-          </div>
+      <div class="winbox">${FR.pill}<span>WIN</span><b data-v="win"></b></div>
+      <div class="corner right">
+        <div class="val betv"><span>${w.bet}</span><b data-v="bet">–</b></div>
+        <div class="pm">
+          <button class="glass sq" data-a="plus" aria-label="+">${FR.sq}<em>+</em></button>
+          <button class="glass sq" data-a="minus" aria-label="−">${FR.sq}<em>−</em></button>
         </div>
-        <div class="minis">
-          <button class="mini" data-a="turbo" title="Turbo">${ICON.turbo}</button>
-          <button class="mini" data-a="auto" title="Auto"><span data-v="auto">${ICON.auto}</span></button>
+        <div class="spincol">
+          <div class="tools">
+            <button class="glass mini" data-a="auto" title="Auto">${FR.sq}<span data-v="auto">${ICON.auto}</span></button>
+            <button class="glass mini" data-a="turbo" title="Turbo">${FR.sq}${ICON.turbo}</button>
+          </div>
+          <button class="glass big spin" data-a="spin" aria-label="Spin">${FR.right}${ICON.spin}</button>
         </div>
       </div>
       <div class="modal" data-m="buy"><div class="card">
