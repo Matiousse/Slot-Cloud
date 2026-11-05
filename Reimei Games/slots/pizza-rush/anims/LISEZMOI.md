@@ -41,23 +41,31 @@ Visages : yeux fermés (clignement), rire, choc, triste, clin d'œil.
 Revenir à `idle` après chaque clip (mix 160 ms).
 
 ## Tony en vidéo (version utilisée par le jeu) : `anims/tony-video/`
-8 vidéos Google Flow (`sources/tony/`) détourées ensemble par `atelier/pizza-rush/tony_videos.py` (un seul recadrage
-pour toutes : même taille, pieds au même endroit), 12 i/s, hauteur 400 px, 19 planches WebP. `src/game/tony-video.ts`
-les joue : `repos` boucle en aller-retour, chaque réaction se joue une fois puis revient au repos (fondu 250 ms).
+8 vidéos Google Flow (`sources/tony/`) détourées ensemble par `atelier/pizza-rush/tony_transitions.py` (un seul recadrage :
+même taille, pieds au même endroit), 12 i/s, 400 px de haut, 27 planches WebP.
 
-| animation | source (s) | quand |
+**Raccords invisibles.** Toutes les vidéos Flow partent de la même image (la pose pivot P) mais Tony s'en éloigne vite :
+un fondu montrait deux Tony superposés. Maintenant toutes les animations passent par P et chaque raccord est une vraie
+séquence de mouvement calculée par flux optique (5 ou 6 images) :
+repos ──sortie (toutes les 12 images)──▶ P ──entrée──▶ réaction ──retour──▶ P ──▶ repos (image 0 = P).
+Une réaction attend au plus 1 s la prochaine sortie du repos. Suspense et perte peuvent être coupés (sorties chaque
+seconde, bras le long du corps) ; les autres vont au bout. Priorité des demandes : bonus > grosgain > rush > gain >
+presque > perte > suspense. `src/game/tony-video.ts` joue ce graphe, une seule image à la fois, sans fondu.
+
+| réaction | extrait de la vidéo | quand |
 |---|---|---|
-| `repos` | Tony_flow_respiration 0–10 | toujours |
-| `gain` | tony-gain 1,5–6,5 | gain ≥ ×3 |
-| `grosgain` | tony-grosgain 4–7,5 | big win (≥ ×15), fin de free spins |
-| `presque` | tony-presque 3–8,5 | 2 scatters sans déclenchement |
-| `perte` | tony-perte 1,5–7 | toutes les 6 pertes d'affilée |
-| `bonus` | tony-bonus 1,5–7,5 (applaudit) | déclenchement / relance des free spins |
-| `rush` | tony-rush 3–7 | Rush Hour |
-| `suspense` | tony-suspense 1,5–8 | anticipation (2 scatters, rouleaux suivants) |
+| `gain` | 0,4–8,6 s (montée et retour ×2) | gain de ×3 à ×15 au jeu de base, hors Rush Hour |
+| `grosgain` | 4–9,1 s | big win (≥ ×15), fin de free spins |
+| `presque` | 0,5–8,6 s (montée ×2) | 2 scatters sans déclenchement |
+| `perte` | 1,5–7 s | toutes les 6 pertes d'affilée |
+| `bonus` | 0,3–7,8 s (applaudit) | déclenchement / relance des free spins |
+| `rush` | 3–7,1 s | Rush Hour |
+| `suspense` | 1,5–7,7 s | anticipation (2 scatters, rouleaux suivants) |
 
 Refaire : extraire chaque vidéo en PNG à 12 i/s (`ffmpeg -i x.mp4 -vf fps=12 dossier/%04d.png`) puis
-`tony_videos.py anims/tony-video 400 repos:dossier:0:10 gain:dossier:1.5:6.5 …`. Démo du scénario : `?demo_force=film`.
+`tony_transitions.py anims/tony-video 400 repos:resp gain:gain:1.5:6.0:0.4:8.0 grosgain:grosgain:4:6.8
+presque:presque:3:8:0.5 perte:perte:1.5:6.5 bonus:bonus:1.5:7 rush:rush:3:6.5 suspense:suspense:1.5:7.5`.
+Démo du scénario : `?demo_force=film`.
 
 ## Fond animé (passants derrière les vitrines)
 Source : `sources/decor/fond-anime.mp4` (Google Flow, 10 s). Boucle sans raccord (la dernière seconde se fond dans la

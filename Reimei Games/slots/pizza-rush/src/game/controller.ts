@@ -336,7 +336,8 @@ export class Game {
     reels.highlight(cells);
     const x = ev.win / 100;
     audio.play(x >= 5 ? 'winBig' : 'win');
-    if (x >= 3 && ev.gameType === 'base') this.stage.tony.play('gain', { then: 'idle' });
+    // petit gain : pas si un big win suit (Tony fera le gros gain) ni après Rush Hour (il vient déjà de réagir)
+    if (x >= 3 && x < 15 && ev.gameType === 'base' && !ev.rush?.length) this.stage.tony.play('gain', { then: 'idle' });
     const label = ev.mult && ev.mult > 1 ? `${money(toMicro(ev.win) / 1_000_000)}  (x${ev.mult})` : money(toMicro(ev.win) / 1_000_000);
     void this.popup(label, x);
     await this.wait(x >= 5 ? 1700 : 1250);
