@@ -137,7 +137,7 @@ table.pay tr:nth-child(even) { background: #ffffff0d; }
 #splash { position: fixed; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center; background: radial-gradient(#3a1e12, #120b10 70%); transition: opacity .5s; }
 #splash.out { opacity: 0; pointer-events: none; }
 #splash .inner { display: flex; flex-direction: column; align-items: center; gap: 2.4vh; width: min(94vw, 1000px); text-align: center; }
-#splash .logo { width: min(78vw, 640px); filter: drop-shadow(0 10px 18px #000a); }
+#splash .logo { width: auto; max-width: min(78vw, 640px); max-height: 40vh; filter: drop-shadow(0 10px 18px #000a); }
 #splash .cards { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
 #splash .sc { width: 220px; background: #00000059; border: 3px solid var(--wood2); border-radius: 20px; padding: 12px; }
 #splash .sc img { width: 92px; }
@@ -163,7 +163,7 @@ table.pay tr:nth-child(even) { background: #ffffff0d; }
 }
 @media (orientation: portrait) {
   #splash .inner { gap: 2vh; }
-  #splash .logo { width: 74vw; }
+  #splash .logo { width: auto; max-width: 74vw; max-height: 32vh; }
   #splash .cards { flex-wrap: nowrap; gap: 2vw; }
   #splash .sc { width: 30vw; padding: 2vw; border-radius: 14px; }
   #splash .sc img { width: 13vw; }
