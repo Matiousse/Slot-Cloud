@@ -18,6 +18,13 @@ h2, h3, .offer .price, table.pay td, table.pay th, #splash .cta, #splash .sc h3,
 .corner.left { left: max(calc(var(--u) * 1.6), env(safe-area-inset-left, 0px)); top: 22%; flex-direction: column; align-items: flex-start; gap: calc(var(--u) * 1); }
 .corner.right { right: max(calc(var(--u) * 1.4), env(safe-area-inset-right, 0px)); bottom: max(calc(var(--u) * 1.4), env(safe-area-inset-bottom, 0px)); align-items: flex-end; gap: calc(var(--u) * .9); }
 .toprow { display: flex; gap: calc(var(--u) * .7); align-items: center; }
+/* paysage : la colonne de gauche descend au même niveau que les commandes de droite (achat du bonus aligné sur le spin) */
+@media (orientation: landscape) {
+  .corner.left { top: auto; bottom: max(calc(var(--u) * 1.4), env(safe-area-inset-bottom, 0px)); }
+  .corner.left .val.bal { order: 0; }
+  .corner.left .toprow { order: 1; flex-wrap: wrap; width: calc(var(--u) * 14); }
+  .corner.left .big.buy { order: 2; }
+}
 .pm { display: flex; flex-direction: column; gap: calc(var(--u) * .7); }
 .tools { display: flex; gap: calc(var(--u) * .7); pointer-events: none; }
 .tools > * { pointer-events: auto; }
@@ -146,7 +153,8 @@ table.pay tr:nth-child(even) { background: #ffffff0d; }
 @media (orientation: portrait) {
   :root { --u: min(1.75vw, 0.95vh); }
   .corner.left { top: auto; bottom: max(calc(var(--u) * 1.4), env(safe-area-inset-bottom, 0px)); }
-  .corner.left .toprow { order: 2; }
+  .corner.left .toprow { order: 1; }
+  .corner.left .big.buy { order: 2; }
   .corner.left .val.bal { order: 3; }
   .corner.right { flex-wrap: wrap; justify-content: flex-end; width: calc(var(--u) * 30); }
   .corner.right .val.betv { order: 4; width: 100%; align-items: flex-end; }
