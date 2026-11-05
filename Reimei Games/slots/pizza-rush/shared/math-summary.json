@@ -1,12 +1,12 @@
 {
   "game": "pizza-rush",
   "version": "1.0.0",
-  "targetRtp": 0.967,
+  "targetRtp": 0.96,
   "maxWinX": 10000,
   "bonusOdds": {
-    "base": 217.41247876781037,
-    "boost": 72.47082624400308,
-    "superboost": 11.44276204413704
+    "base": 217.4243290554039,
+    "boost": 72.4747764214066,
+    "superboost": 11.443385752247261
   },
   "tierSplit": {
     "1": 0.9569076559170006,
@@ -16,45 +16,45 @@
   "modes": {
     "base": {
       "cost": 1,
-      "rtp": 0.967,
-      "hitRate": 0.604977,
-      "maxWinOdds": 4253158
+      "rtp": 0.96,
+      "hitRate": 0.603963,
+      "maxWinOdds": 4293514
     },
     "boost": {
       "cost": 2,
-      "rtp": 0.967,
-      "hitRate": 0.608626,
-      "maxWinOdds": 1417719
+      "rtp": 0.96,
+      "hitRate": 0.607622,
+      "maxWinOdds": 1431171
     },
     "superboost": {
       "cost": 10,
-      "rtp": 0.967,
-      "hitRate": 0.637821,
-      "maxWinOdds": 223850
+      "rtp": 0.96,
+      "hitRate": 0.63689,
+      "maxWinOdds": 225974
     },
     "rush": {
       "cost": 4,
-      "rtp": 0.967,
-      "hitRate": 0.86968,
+      "rtp": 0.96,
+      "hitRate": 0.869101,
       "maxWinOdds": 4060835
     },
     "bonus": {
       "cost": 100,
-      "rtp": 0.967,
-      "hitRate": 0.999896,
-      "maxWinOdds": 216439
+      "rtp": 0.96,
+      "hitRate": 0.999895,
+      "maxWinOdds": 218461
     },
     "super": {
       "cost": 200,
-      "rtp": 0.967,
-      "hitRate": 0.999103,
-      "maxWinOdds": 1003030
+      "rtp": 0.96,
+      "hitRate": 0.999098,
+      "maxWinOdds": 1012814
     },
     "mystery": {
       "cost": 300,
-      "rtp": 0.967,
-      "hitRate": 0.841425,
-      "maxWinOdds": 81839
+      "rtp": 0.96,
+      "hitRate": 0.839423,
+      "maxWinOdds": 82038
     }
   }
 }
