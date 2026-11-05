@@ -1,6 +1,8 @@
 // Mode démo hors ligne : de vrais tours PIZZA RUSH, générés en direct par le moteur de maths partagé
 // (RNG crypto). Utilisé quand le jeu est ouvert sans session Stake (tests en local). Jamais sur Stake.
 //   ?demo_force=rush|big|t1|t2|t3  → chaque tour montre cette fonction (pour tester vite)
+//   ?demo_force=film                → scénario de démonstration : gain, Rush Hour, gros gain, bonus raté de peu,
+//                                     série de pertes (Tony déçu), puis bonus obtenu
 
 import { Engine, NATURAL, cryptoRng } from '../../shared/engine';
 import { modeByName, type Tier } from '../../shared/game';
@@ -16,6 +18,7 @@ export class DemoBackend implements Backend {
   private pending = 0;
   private eng = new Engine(cryptoRng());
   private rng = cryptoRng();
+  private filmStep = 0;
 
   constructor(
     private currency = 'EUR',
@@ -49,7 +52,8 @@ export class DemoBackend implements Backend {
     this.balance -= cost;
     let res;
     const f = this.force;
-    if (/^t[123]$/.test(f) && mode.kind !== 'buy') res = this.eng.bonus(Number(f[1]) as Tier, true);
+    if (f === 'film' && mode.kind !== 'buy') res = this.filmRound();
+    else if (/^t[123]$/.test(f) && mode.kind !== 'buy') res = this.eng.bonus(Number(f[1]) as Tier, true);
     else if (f === 'rush' || f === 'big') {
       do res = this.eng.noBonus(true);
       while (f === 'rush' ? res.rush === 0 : res.payout < 2000);
@@ -64,6 +68,32 @@ export class DemoBackend implements Backend {
       balance: this.balance,
       round: { amount, payoutMultiplier: res.payout / 100, active: res.payout > 0, mode: mode.name, state: res.events! },
     };
+  }
+
+  private filmRound() {
+    const FILM = ['gain', 'perte', 'rush', 'big', 'perte', 'presque', 'perte', 'perte', 'perte', 'perte', 'bonus'];
+    const step = FILM[Math.min(this.filmStep++, FILM.length - 1)];
+    const sc = (r: ReturnType<Engine['noBonus']>) => {
+      const board = (r.events![0] as { board: string[] }).board;
+      return board.map((reel) => (reel.match(/SC/g) ?? []).length);
+    };
+    const total = (a: number[]) => a.reduce((x, y) => x + y, 0);
+    for (let i = 0; i < 200000; i++) {
+      if (step === 'bonus') {
+        const r = this.eng.bonus(1, true);
+        if (r.payout >= 2000 && r.payout <= 8000) return r;
+        continue;
+      }
+      const r = this.eng.noBonus(true);
+      const s = sc(r);
+      if (step === 'gain' && r.payout >= 300 && r.payout < 1000 && !r.rush && total(s) < 2) return r;
+      if (step === 'rush' && r.rush && r.payout >= 200 && r.payout < 1500) return r;
+      if (step === 'big' && r.payout >= 2000 && r.payout < 6000 && !r.rush) return r;
+      if (step === 'perte' && r.payout === 0 && total(s) < 2) return r;
+      // raté de peu : 2 scatters sur les 3 premiers rouleaux (longue anticipation), rien de gagné
+      if (step === 'presque' && r.payout === 0 && total(s) === 2 && total(s.slice(0, 3)) === 2) return r;
+    }
+    return this.eng.natural(true);
   }
 
   async endRound() {

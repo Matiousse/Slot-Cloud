@@ -39,3 +39,22 @@ Visages : yeux fermés (clignement), rire, choc, triste, clin d'œil.
 | `perte` | 1500 ms | série de pertes (pas à chaque spin) | — |
 | `bonus` | 1500 ms | déclenchement des free spins (petit saut + clin d'œil) | `bonus` 340 |
 Revenir à `idle` après chaque clip (mix 160 ms).
+
+## Tony en vidéo (version utilisée par le jeu) : `anims/tony-video/`
+8 vidéos Google Flow (`sources/tony/`) détourées ensemble par `atelier/pizza-rush/tony_videos.py` (un seul recadrage
+pour toutes : même taille, pieds au même endroit), 12 i/s, hauteur 400 px, 19 planches WebP. `src/game/tony-video.ts`
+les joue : `repos` boucle en aller-retour, chaque réaction se joue une fois puis revient au repos (fondu 250 ms).
+
+| animation | source (s) | quand |
+|---|---|---|
+| `repos` | Tony_flow_respiration 0–10 | toujours |
+| `gain` | tony-gain 1,5–6,5 | gain ≥ ×3 |
+| `grosgain` | tony-grosgain 4–7,5 | big win (≥ ×15), fin de free spins |
+| `presque` | tony-presque 3–8,5 | 2 scatters sans déclenchement |
+| `perte` | tony-perte 1,5–7 | toutes les 6 pertes d'affilée |
+| `bonus` | tony-bonus 1,5–7,5 (applaudit) | déclenchement / relance des free spins |
+| `rush` | tony-rush 3–7 | Rush Hour |
+| `suspense` | tony-suspense 1,5–8 | anticipation (2 scatters, rouleaux suivants) |
+
+Refaire : extraire chaque vidéo en PNG à 12 i/s (`ffmpeg -i x.mp4 -vf fps=12 dossier/%04d.png`) puis
+`tony_videos.py anims/tony-video 400 repos:dossier:0:10 gain:dossier:1.5:6.5 …`. Démo du scénario : `?demo_force=film`.

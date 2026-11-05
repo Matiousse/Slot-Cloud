@@ -270,6 +270,7 @@ export class Game {
       if (antic) {
         reels.setAnticipation(r, true);
         audio.startLoop('suspense');
+        this.stage.tony.play('suspense', { then: 'idle' });
         await this.wait(1100);
       } else if (r > 0) await this.wait(gap);
       const fast = this.skipReq || this.turbo;
@@ -290,7 +291,7 @@ export class Game {
 
     // Rush Hour : Tony passe et pose des parts dorées
     if (ev.rush?.length) {
-      this.stage.tony.play('bonus', { then: 'idle' });
+      this.stage.tony.play('rush', { then: 'idle' });
       audio.play('rush');
       await this.banner(['RUSH HOUR!'], 900, true);
       for (const [r, y] of ev.rush) {
