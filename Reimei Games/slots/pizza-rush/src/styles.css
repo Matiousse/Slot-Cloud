@@ -153,7 +153,7 @@ table.pay tr:nth-child(even) { background: #ffffff0d; }
 @media (orientation: portrait) {
   :root { --u: min(1.75vw, 0.95vh); }
   .corner.left { top: auto; bottom: max(calc(var(--u) * 1.4), env(safe-area-inset-bottom, 0px)); }
-  .corner.left .toprow { order: 1; }
+  .corner.left .toprow { order: 1; flex-wrap: wrap; width: calc(var(--u) * 15); }   /* FEATURES sur sa ligne : le centre reste à Tony */
   .corner.left .big.buy { order: 2; }
   .corner.left .val.bal { order: 3; }
   .corner.right { flex-wrap: wrap; justify-content: flex-end; width: calc(var(--u) * 30); }

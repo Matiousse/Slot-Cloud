@@ -195,7 +195,7 @@ export class Stage {
       this.logo.position.set(540, 150);
       this.frame.scale.set(0.92);
       this.frame.position.set(540, 712);
-      this.placeTony(540, 1690, 0.7, 0.24);
+      this.placeTony(540, 1760, 0.8, 0.28);
       this.fsPanel.scale.set(0.7);
       this.fsPanel.position.set(880, 1300);
     } else {
@@ -204,7 +204,7 @@ export class Stage {
       this.logo.position.set(230, 120);
       this.frame.scale.set(0.86);
       this.frame.position.set(1000, 452);
-      this.placeTony(468, 1060, 0.949, 0.33);
+      this.placeTony(452, 1066, 1.14, 0.4);
       this.fsPanel.scale.set(0.72);
       this.fsPanel.position.set(1720, 165);
     }
