@@ -68,12 +68,16 @@ presque:presque:3:8:0.5 perte:perte:1.5:6.5 bonus:bonus:1.5:7 rush:rush:3:6.5 su
 Démo du scénario : `?demo_force=film`.
 
 ## Fond animé (passants derrière les vitrines)
-Source : `sources/decor/fond-anime.mp4` (Google Flow, 10 s). Boucle sans raccord (la dernière seconde se fond dans la
-première), 1600×900, sans son :
+Source : `sources/decor/fond-anime.mp4` (Google Flow, 10 s). La vidéo brute tremble (caméra qui flotte de 1-2 px et
+décor redessiné à chaque image) : `atelier/pizza-rush/fond_stabilise.py` reconstruit le fond à partir de l'IMAGE FIXE et
+ne prend de la vidéo, recalée image par image, que ce qui bouge vraiment (rue dans les vitrines, porte, feu : ~8 % de
+l'image). Puis boucle sans raccord (la dernière seconde se fond dans la première) :
 ```
-F="[0:v]split[a][b];[a]trim=start=1:end=9.95,setpts=PTS-STARTPTS[A];[b]trim=start=0:end=1,setpts=PTS-STARTPTS[B];[A][B]xfade=transition=fade:duration=1:offset=7.95,scale=1600:900:flags=lanczos,format=yuv420p"
-ffmpeg -i fond-anime.mp4 -filter_complex "$F" -an -c:v libvpx-vp9 -b:v 0 -crf 38 -row-mt 1 _fond-boucle.webm
-ffmpeg -i fond-anime.mp4 -filter_complex "$F" -an -c:v libx264 -crf 26 -preset slow -movflags +faststart _fond-boucle.mp4
+ffmpeg -i fond-anime.mp4 images/%04d.png
+fond_stabilise.py public/img/fond.webp images stab 1600
+F="[0:v]split[a][b];[a]trim=start=1:end=9.95,setpts=PTS-STARTPTS[A];[b]trim=start=0:end=1,setpts=PTS-STARTPTS[B];[A][B]xfade=transition=fade:duration=1:offset=7.95,format=yuv420p"
+ffmpeg -framerate 24 -i stab/%04d.png -filter_complex "$F" -an -c:v libvpx-vp9 -b:v 0 -crf 36 -row-mt 1 _fond-boucle.webm
+ffmpeg -framerate 24 -i stab/%04d.png -filter_complex "$F" -an -c:v libx264 -crf 24 -preset slow -movflags +faststart _fond-boucle.mp4
 ```
 `scripts/assets.py` les copie en `public/img/fond.webm|mp4` ; le jeu prend le WebM (ou le MP4 sur Safari) et retombe sur
 `img/fond.webp` si la vidéo ne charge pas. `?film=1` : la vidéo suit l'horloge de la page (tournages image par image).
