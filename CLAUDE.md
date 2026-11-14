@@ -17,7 +17,8 @@
   Décor : intérieur de la pizzeria avec vitrines, fond VIDÉO en boucle (passants), Tony debout sur un tabouret entre la colonne de gauche et le cadre.
 - Tony est joué par des VIDÉOS Google Flow (repos + 7 réactions : gain, grosgain, presque, perte, bonus, rush, suspense ; voir `anims/LISEZMOI.md`, outil `atelier/pizza-rush/tony_videos.py`). Ancienne note : vidéo de respiration détourée en planches de sprites
   (`atelier/pizza-rush/tony_video.py`, 12 i/s, boucle aller-retour). Le rig Rig Lab de Tony reste dans le code (désactivé).
-- « Lancer en local » = l'utilisateur ne voit pas le localhost du conteneur : construire et publier en artifact.
+- « Lancer en local » : en session CLOUD, l'utilisateur ne voit pas le localhost du conteneur → construire et publier en artifact.
+  En session LOCALE sur son ordinateur (guide `SESSION-LOCALE.md`), `npm run dev` suffit : il ouvre http://localhost:5210.
 
 ## Ressources (fouille GitHub, licences commerciales OK)
 Avant de créer quoi que ce soit, regarder `Reimei Games/tools/ressources/` : docs officielles Stake Engine (RGS, format des
