@@ -4,6 +4,23 @@ Tout le studio est dans ce dépôt GitHub : **Matiousse/Slot-Cloud**, branche **
 Il contient le jeu, les maths Stake (96,00 %), les vidéos de Tony, le décor, les sons, Rig Lab et la mémoire du studio
 (`CLAUDE.md`, lue automatiquement par Claude Code à l'ouverture du dossier).
 
+## Sur Mac : la marche à suivre complète (Terminal : Cmd + Espace, tape « Terminal », Entrée)
+
+```
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+(mot de passe du Mac demandé, rien ne s'affiche quand tu le tapes ; à la fin, copie-colle les 2 lignes « Next steps »)
+```
+brew install git node gh ffmpeg python
+gh auth login
+gh repo clone Matiousse/Slot-Cloud -- --depth 1 -b claude/tender-dijkstra-agumtz
+npm install -g @anthropic-ai/claude-code
+cd Slot-Cloud
+claude
+```
+Pour `gh auth login` : GitHub.com → HTTPS → Yes (authenticate Git) → Login with a web browser.
+Les fois suivantes : ouvrir le Terminal, puis `cd Slot-Cloud` et `claude`.
+
 ## 1. Ce qu'il faut sur ton ordinateur (une seule fois)
 
 | Outil | Mac | Windows |
